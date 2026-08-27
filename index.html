@@ -953,5 +953,28 @@ window.__initDeck=function(){
 })();
 </script>
 
+<style>
+/* v4.0 status styling — placed last so it wins the cascade over the original theme */
+.status{flex-wrap:nowrap;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.status .sb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 2px 5px;font-size:8.5px;font-weight:700;letter-spacing:.02em;line-height:1;
+  border:1.5px solid var(--line-strong);border-radius:9px}
+.status .sb em{font-style:normal;font-size:15px;line-height:1;filter:grayscale(1);opacity:.75}
+.status .sb[aria-pressed="true"] em{filter:none;opacity:1}
+/* Outreach = one blue family: identical navy outline, stepped solid fills, white text */
+.status .sb[data-v="lm"][aria-pressed="true"]{background:#3462A8;color:#fff;border-color:#1F3A5F}
+.status .sb[data-v="tx"][aria-pressed="true"]{background:#4A78BC;color:#fff;border-color:#1F3A5F}
+.status .sb[data-v="em"][aria-pressed="true"]{background:#6190CC;color:#fff;border-color:#1F3A5F}
+/* Conversation = golds: SPOKE is an opaque tint of its own outline, label in the outline gold */
+.status .sb[data-v="connected"][aria-pressed="true"]{background:#F5E7C0;color:#A87F0F;border-color:#C79812}
+.status .sb[data-v="booked"][aria-pressed="true"]{background:#8A6A22;color:#fff;border-color:#8A6A22}
+/* Results = traffic light */
+.status .sb[data-v="done"][aria-pressed="true"]{background:#6FBF8F;color:#0E2A19;border-color:#2F7D4F}
+.status .sb[data-v="order"][aria-pressed="true"]{background:#2F7D4F;color:#fff;border-color:#2F7D4F}
+.status .sb[data-v="skip"][aria-pressed="true"]{background:#A33B2E;color:#fff;border-color:#A33B2E}
+.card[data-s="em"] .spine{background:#6190CC}
+.card[data-s="done"] .spine{background:#6FBF8F}
+.card[data-s="order"] .spine{background:#2F7D4F}
+</style>
 </body>
 </html>
