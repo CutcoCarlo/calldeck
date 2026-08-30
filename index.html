@@ -386,11 +386,9 @@ footer .m{font-size:12px;color:var(--ink-3)}
 </div>
 
 <div class="panel" id="deckpanel" data-p="_none">
+<div class="geobar" id="geobar" hidden></div>
 <div class="cards" id="pool"></div>
-</div>
-
-<div class="panel" data-p="_setup" data-nocard="1" hidden>
-<div class="setupwrap" id="setupwrap">
+<div class="setupwrap" id="setupwrap" hidden>
 <div class="setuphead">Setup &middot; you should rarely need this</div>
 <div class="dayload">
 <textarea id="daycode" placeholder="Paste the DAY code from your daily plan here&hellip;" aria-label="Day code"></textarea>
@@ -439,6 +437,28 @@ footer .m{font-size:12px;color:var(--ink-3)}
 
 <style>
 /* v6 additions */
+/* Two horizontal scrollers live on this page — the tab bar and the chip
+   row. Tapping something near their right edge can otherwise drag the whole
+   page sideways, which on a phone reads as the app breaking. */
+html,body{overflow-x:hidden;max-width:100%}
+.geochips,.tabs{max-width:100%}
+/* where will you be — the chip row */
+/* The panel is a flex column, and a flex item will not shrink below its
+   own content unless told to. Without min-width:0 the ten chips push this
+   bar to 700px and drag the whole page sideways with it. */
+.geobar{max-width:720px;margin:0 auto 4px;padding:2px 14px 10px;min-width:0;width:100%;box-sizing:border-box}
+.geochips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;min-width:0}
+.geochips::-webkit-scrollbar{display:none}
+.gc{flex:0 0 auto;padding:7px 12px;border:1.5px solid var(--line-strong);border-radius:999px;
+  background:var(--ground);color:var(--ink-2);font:600 11.5px/1 var(--sans);letter-spacing:.02em;
+  white-space:nowrap;cursor:pointer}
+.gc[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.gcelse{border-style:dashed}
+.geocity{margin-top:10px}
+.geocity input{width:100%;padding:11px 12px;border:1.5px solid var(--line-strong);border-radius:10px;
+  background:var(--ground);color:var(--ink);font:500 15px/1.2 var(--sans);margin-bottom:8px}
+.geonote{margin:6px 0 0;font-size:11.5px;color:var(--ink-3)}
+
 /* The gate is position:fixed with display:flex, so plain [hidden] loses the
    cascade and an invisible overlay swallows every tap. */
 #gate[hidden]{display:none!important}
@@ -449,6 +469,7 @@ footer .m{font-size:12px;color:var(--ink-3)}
 .linemark em{margin-top:-9px;background:var(--bg);padding:0 8px;font-style:normal;font-size:11px;color:var(--ink-3)}
 .tabnote{margin:0 14px 8px;font-size:11.5px;line-height:1.5;color:var(--ink-3)}
 .gapnote{font-size:12px}
+.tabnote .warn{color:#8f2f2f}
 .dim{color:var(--ink-3)}
 .tabs .tab .n{opacity:.65}
 </style>
@@ -456,7 +477,7 @@ footer .m{font-size:12px;color:var(--ink-3)}
 <script>
 /* generated from geo.js + corridor.js — do not hand-edit */
 (function(){
-var REGION={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-Valley","san ramon":"Tri-Valley","danville":"Tri-Valley","castro valley":"Tri-Valley","sunol":"Tri-Valley","oakland":"East Bay","berkeley":"East Bay","alameda":"East Bay","san leandro":"East Bay","san lorenzo":"East Bay","hayward":"East Bay","union city":"East Bay","newark":"East Bay","fremont":"East Bay","emeryville":"East Bay","piedmont":"East Bay","albany":"East Bay","el cerrito":"East Bay","richmond":"East Bay","milpitas":"East Bay","concord":"Diablo Valley","clayton":"Diablo Valley","pleasant hill":"Diablo Valley","walnut creek":"Diablo Valley","martinez":"Diablo Valley","lafayette":"Diablo Valley","orinda":"Diablo Valley","moraga":"Diablo Valley","antioch":"Diablo Valley","brentwood":"Diablo Valley","discovery bay":"Diablo Valley","byron":"Diablo Valley","pittsburg":"Diablo Valley","oakley":"Diablo Valley","benicia":"Diablo Valley","san francisco":"SF and Peninsula","south san francisco":"SF and Peninsula","daly city":"SF and Peninsula","brisbane":"SF and Peninsula","millbrae":"SF and Peninsula","burlingame":"SF and Peninsula","san mateo":"SF and Peninsula","foster city":"SF and Peninsula","belmont":"SF and Peninsula","san carlos":"SF and Peninsula","redwood city":"SF and Peninsula","menlo park":"SF and Peninsula","atherton":"SF and Peninsula","palo alto":"SF and Peninsula","hillsborough":"SF and Peninsula","pacifica":"SF and Peninsula","half moon bay":"SF and Peninsula","san bruno":"SF and Peninsula","woodside":"SF and Peninsula","portola valley":"SF and Peninsula","san jose":"South Bay","santa clara":"South Bay","sunnyvale":"South Bay","mountain view":"South Bay","cupertino":"South Bay","campbell":"South Bay","los gatos":"South Bay","saratoga":"South Bay","morgan hill":"South Bay","gilroy":"South Bay","los altos":"South Bay","monte sereno":"South Bay","san martin":"South Bay","santa cruz":"Santa Cruz","scotts valley":"Santa Cruz","capitola":"Santa Cruz","aptos":"Santa Cruz","soquel":"Santa Cruz","ben lomond":"Santa Cruz","felton":"Santa Cruz","freedom":"Santa Cruz","watsonville":"Santa Cruz","corralitos":"Santa Cruz","la selva beach":"Santa Cruz","boulder creek":"Santa Cruz","live oak":"Santa Cruz","monterey":"Monterey and Salinas","seaside":"Monterey and Salinas","marina":"Monterey and Salinas","salinas":"Monterey and Salinas","carmel":"Monterey and Salinas","carmel valley":"Monterey and Salinas","prunedale":"Monterey and Salinas","spreckels":"Monterey and Salinas","hollister":"Monterey and Salinas","pacific grove":"Monterey and Salinas","castroville":"Monterey and Salinas","gonzales":"Monterey and Salinas","novato":"North Bay","san rafael":"North Bay","san anselmo":"North Bay","petaluma":"North Bay","sonoma":"North Bay","napa":"North Bay","vallejo":"North Bay","tiburon":"North Bay","sausalito":"North Bay","mill valley":"North Bay","vacaville":"North Bay","fairfield":"North Bay","santa rosa":"North Bay","rohnert park":"North Bay","larkspur":"North Bay","corte madera":"North Bay","tracy":"Central Valley","manteca":"Central Valley","stockton":"Central Valley","modesto":"Central Valley","mountain house":"Central Valley","chowchilla":"Central Valley","merced":"Central Valley","lathrop":"Central Valley","ripon":"Central Valley","lodi":"Central Valley","turlock":"Central Valley","antelope":"Central Valley","sacramento":"Central Valley","elk grove":"Central Valley","roseville":"Central Valley","folsom":"Central Valley"};
+var REGION={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-Valley","san ramon":"Tri-Valley","danville":"Tri-Valley","sunol":"Tri-Valley","oakland":"East Bay","berkeley":"East Bay","alameda":"East Bay","san leandro":"East Bay","san lorenzo":"East Bay","castro valley":"East Bay","hayward":"East Bay","union city":"East Bay","newark":"East Bay","fremont":"East Bay","emeryville":"East Bay","piedmont":"East Bay","albany":"East Bay","el cerrito":"East Bay","richmond":"East Bay","concord":"Diablo Valley","clayton":"Diablo Valley","pleasant hill":"Diablo Valley","walnut creek":"Diablo Valley","martinez":"Diablo Valley","lafayette":"Diablo Valley","orinda":"Diablo Valley","moraga":"Diablo Valley","antioch":"Diablo Valley","brentwood":"Diablo Valley","discovery bay":"Diablo Valley","byron":"Diablo Valley","pittsburg":"Diablo Valley","oakley":"Diablo Valley","benicia":"Diablo Valley","san francisco":"SF and Peninsula","south san francisco":"SF and Peninsula","daly city":"SF and Peninsula","brisbane":"SF and Peninsula","millbrae":"SF and Peninsula","burlingame":"SF and Peninsula","san mateo":"SF and Peninsula","foster city":"SF and Peninsula","belmont":"SF and Peninsula","san carlos":"SF and Peninsula","redwood city":"SF and Peninsula","menlo park":"SF and Peninsula","atherton":"SF and Peninsula","palo alto":"SF and Peninsula","hillsborough":"SF and Peninsula","pacifica":"SF and Peninsula","half moon bay":"SF and Peninsula","san bruno":"SF and Peninsula","woodside":"SF and Peninsula","portola valley":"SF and Peninsula","san jose":"South Bay","santa clara":"South Bay","sunnyvale":"South Bay","mountain view":"South Bay","cupertino":"South Bay","campbell":"South Bay","los gatos":"South Bay","saratoga":"South Bay","morgan hill":"South Bay","gilroy":"South Bay","los altos":"South Bay","monte sereno":"South Bay","san martin":"South Bay","milpitas":"South Bay","santa cruz":"Santa Cruz","scotts valley":"Santa Cruz","capitola":"Santa Cruz","aptos":"Santa Cruz","soquel":"Santa Cruz","ben lomond":"Santa Cruz","felton":"Santa Cruz","freedom":"Santa Cruz","watsonville":"Santa Cruz","corralitos":"Santa Cruz","la selva beach":"Santa Cruz","boulder creek":"Santa Cruz","live oak":"Santa Cruz","monterey":"Monterey and Salinas","seaside":"Monterey and Salinas","marina":"Monterey and Salinas","salinas":"Monterey and Salinas","carmel":"Monterey and Salinas","carmel valley":"Monterey and Salinas","prunedale":"Monterey and Salinas","spreckels":"Monterey and Salinas","hollister":"Monterey and Salinas","pacific grove":"Monterey and Salinas","castroville":"Monterey and Salinas","gonzales":"Monterey and Salinas","novato":"North Bay","san rafael":"North Bay","san anselmo":"North Bay","petaluma":"North Bay","sonoma":"North Bay","napa":"North Bay","vallejo":"North Bay","tiburon":"North Bay","sausalito":"North Bay","mill valley":"North Bay","vacaville":"North Bay","fairfield":"North Bay","santa rosa":"North Bay","rohnert park":"North Bay","larkspur":"North Bay","corte madera":"North Bay","tracy":"Central Valley","manteca":"Central Valley","stockton":"Central Valley","modesto":"Central Valley","mountain house":"Central Valley","chowchilla":"Central Valley","merced":"Central Valley","lathrop":"Central Valley","ripon":"Central Valley","lodi":"Central Valley","turlock":"Central Valley","antelope":"Central Valley","sacramento":"Central Valley","elk grove":"Central Valley","roseville":"Central Valley","folsom":"Central Valley"};
 var COORD={"Livermore":[37.682,-121.768],"Pleasanton":[37.662,-121.875],"Dublin":[37.702,-121.936],"San Ramon":[37.78,-121.978],"Danville":[37.822,-121.999],"Castro Valley":[37.694,-122.086],"Sunol":[37.594,-121.883],"Oakland":[37.804,-122.271],"Berkeley":[37.872,-122.271],"Alameda":[37.765,-122.242],"San Leandro":[37.725,-122.156],"San Lorenzo":[37.681,-122.124],"Hayward":[37.669,-122.081],"Union City":[37.596,-122.044],"Newark":[37.53,-122.04],"Fremont":[37.548,-121.989],"Emeryville":[37.831,-122.285],"Piedmont":[37.824,-122.232],"Albany":[37.887,-122.298],"El Cerrito":[37.916,-122.311],"Richmond":[37.936,-122.348],"Milpitas":[37.428,-121.907],"Concord":[37.978,-122.031],"Clayton":[37.941,-121.936],"Pleasant Hill":[37.948,-122.061],"Walnut Creek":[37.91,-122.065],"Martinez":[38.019,-122.134],"Lafayette":[37.886,-122.118],"Orinda":[37.877,-122.18],"Moraga":[37.835,-122.13],"Antioch":[38.005,-121.806],"Brentwood":[37.932,-121.696],"Discovery Bay":[37.908,-121.6],"Byron":[37.866,-121.638],"Pittsburg":[38.028,-121.885],"Oakley":[37.998,-121.713],"Benicia":[38.049,-122.159],"San Francisco":[37.775,-122.419],"South San Francisco":[37.655,-122.408],"Daly City":[37.688,-122.47],"Brisbane":[37.681,-122.4],"Millbrae":[37.599,-122.387],"Burlingame":[37.584,-122.366],"San Mateo":[37.563,-122.326],"Foster City":[37.558,-122.271],"Belmont":[37.52,-122.276],"San Carlos":[37.507,-122.261],"Redwood City":[37.485,-122.236],"Menlo Park":[37.454,-122.182],"Atherton":[37.461,-122.198],"Palo Alto":[37.442,-122.143],"Hillsborough":[37.574,-122.373],"Pacifica":[37.614,-122.487],"Half Moon Bay":[37.463,-122.429],"San Bruno":[37.63,-122.411],"Woodside":[37.43,-122.254],"Portola Valley":[37.384,-122.235],"San Jose":[37.339,-121.895],"Santa Clara":[37.354,-121.955],"Sunnyvale":[37.369,-122.036],"Mountain View":[37.386,-122.083],"Cupertino":[37.323,-122.032],"Campbell":[37.287,-121.95],"Los Gatos":[37.227,-121.975],"Saratoga":[37.264,-122.023],"Morgan Hill":[37.13,-121.654],"Gilroy":[37.006,-121.568],"Los Altos":[37.385,-122.114],"Monte Sereno":[37.236,-121.993],"San Martin":[37.085,-121.61],"Santa Cruz":[36.974,-122.031],"Scotts Valley":[37.051,-122.015],"Capitola":[36.975,-121.953],"Aptos":[36.977,-121.9],"Soquel":[36.988,-121.957],"Ben Lomond":[37.089,-122.086],"Felton":[37.051,-122.074],"Freedom":[36.938,-121.771],"Watsonville":[36.91,-121.757],"Corralitos":[36.983,-121.802],"La Selva Beach":[36.938,-121.866],"Boulder Creek":[37.126,-122.122],"Live Oak":[36.976,-121.986],"Monterey":[36.6,-121.894],"Seaside":[36.611,-121.851],"Marina":[36.684,-121.802],"Salinas":[36.678,-121.655],"Carmel":[36.555,-121.923],"Carmel Valley":[36.48,-121.731],"Prunedale":[36.777,-121.669],"Spreckels":[36.629,-121.653],"Hollister":[36.851,-121.402],"Pacific Grove":[36.618,-121.917],"Castroville":[36.766,-121.755],"Gonzales":[36.507,-121.444],"Novato":[38.107,-122.57],"San Rafael":[37.974,-122.531],"San Anselmo":[37.975,-122.562],"Petaluma":[38.232,-122.637],"Sonoma":[38.292,-122.458],"Napa":[38.297,-122.287],"Vallejo":[38.104,-122.257],"Tiburon":[37.874,-122.457],"Sausalito":[37.859,-122.485],"Mill Valley":[37.906,-122.545],"Vacaville":[38.357,-121.988],"Fairfield":[38.249,-122.04],"Santa Rosa":[38.44,-122.714],"Rohnert Park":[38.34,-122.701],"Larkspur":[37.934,-122.535],"Corte Madera":[37.925,-122.527],"Tracy":[37.74,-121.426],"Manteca":[37.797,-121.216],"Stockton":[37.958,-121.291],"Modesto":[37.639,-120.997],"Mountain House":[37.783,-121.543],"Chowchilla":[37.123,-120.26],"Merced":[37.302,-120.483],"Lathrop":[37.823,-121.277],"Ripon":[37.741,-121.124],"Lodi":[38.13,-121.272],"Turlock":[37.495,-120.847],"Antelope":[38.712,-121.36],"Sacramento":[38.582,-121.494],"Elk Grove":[38.409,-121.372],"Roseville":[38.752,-121.288],"Folsom":[38.678,-121.176]};
 var AREA={'415':'SF and Peninsula','628':'SF and Peninsula','650':'SF and Peninsula','510':'East Bay','341':'East Bay','925':'Tri-Valley','408':'South Bay','669':'South Bay','831':'Santa Cruz','707':'North Bay','209':'Central Valley','916':'Central Valley','279':'Central Valley'};
 var HOME = 'Aptos';
@@ -567,7 +588,228 @@ function citiesOn(dests, opts) {
 }
 
 
-window.__GEO={REGION:REGION,AREA:AREA,regionForPhone:function(p){var d=String(p||'').replace(/\D/g,'');var ac=d.length>=10?d.slice(-10,-7):'';return AREA[ac]||'';},COORD:COORD,region:function(c){return REGION[String(c||"").toLowerCase()]||"";},resolve:resolve,corridorsFor:corridorsFor,citiesOn:citiesOn,miles:miles,coordOf:coordOf};
+
+/* Middle of each region, used when Carlo taps a chip instead of naming a
+   city. The corridor is then drawn from Aptos through that point, so
+   "Peninsula" means everyone on the way up and back — not just the handful
+   who happen to live in one town. */
+var CENTROID={"Tri-Valley":[37.707,-121.9065],"East Bay":[37.7519,-122.1852],"Diablo Valley":[37.9453,-121.9435],"SF and Peninsula":[37.5533,-122.3266],"South Bay":[37.2728,-121.9139],"Santa Cruz":[36.9982,-121.9477],"Monterey and Salinas":[36.6463,-121.7247],"North Bay":[38.1166,-122.4559],"Central Valley":[37.979,-121.1516]};
+
+/* How far is this worth driving? Carlo's numbers, Aug 30, and there are
+   THREE distances, not two — separating them is what stopped a $16,200
+   order from buying a 120-mile detour:
+
+     home   — no route picked. Is this worth a trip from Aptos at all?
+     route  — how far off a trip already committed to.
+     near   — how far from a city an appointment has already anchored him to.
+
+   Business is treated differently from residential on purpose. A business
+   gift sale can close on a Zoom call and ship, and the same account buys
+   again year after year, so above $1,000 there is no distance at which
+   Carlo would rather let it slip. Residential needs him in the kitchen.
+
+   Read as: an order of THIS size is worth THIS many miles. In between, the
+   allowance is interpolated; below the first row it holds; at and above the
+   last it holds (or runs to no limit). All of it is tunable from the
+   content file, because these are preferences and not facts. */
+var DRIVE = {
+  r: {
+    home:  [[200, 25], [500, 50], [2000, 100], [5000, 150]],
+    route: [[200, 10], [750, 20], [2000, 35],  [5000, 50]]
+  },
+  b: {
+    /* No distance limit on business at all, at any size. Carlo's call,
+       Aug 30, following his own Zoom argument to its end: a business gift
+       sale can close on a call and ship, so how far away the buyer lives has
+       nothing to do with whether it is worth ringing them. An earlier
+       version capped small business orders at 50 miles and quietly dropped a
+       $500 gift order in Oakland — a sale that never required a car.
+       Distance still matters for business when planning a driving day, and
+       that is what the route table below is for. */
+    home:  [[0, Infinity]],
+    route: [[200, 10], [500, 20], [1000, 35],  [5000, 75]]
+  }
+};
+/* Anchored in a town, the drive out is already paid for, so the radius is
+   read off the same curve as a detour. */
+var NEAR_USES = 'route';
+
+function driveAllow(kind, mode, opp, tune) {
+  var table = ((tune && tune.DRIVE) || DRIVE)[kind === 'b' ? 'b' : 'r'][mode] || [];
+  if (!table.length) return 0;
+  var v = Number(opp) || 0;
+  if (v <= table[0][0]) return table[0][1];
+  for (var i = 1; i < table.length; i++) {
+    if (v <= table[i][0]) {
+      var a = table[i - 1], b = table[i];
+      if (b[1] === Infinity) return Infinity;
+      return a[1] + (b[1] - a[1]) * (v - a[0]) / (b[0] - a[0]);
+    }
+  }
+  return table[table.length - 1][1];
+}
+function detourMiles(opp, tune, kind) { return driveAllow(kind, 'route', opp, tune); }
+function radiusMiles(opp, tune, kind) { return driveAllow(kind, NEAR_USES, opp, tune); }
+function homeMiles(opp, tune, kind)   { return driveAllow(kind, 'home',  opp, tune); }
+function allowedMiles(opp, tune, kind){ return detourMiles(opp, tune, kind); }
+
+/* Straight distance between two named places, in driving-ish miles. */
+function between(a, b) {
+  var p = coordOf(a), q = coordOf(b);
+  if (!p || !q) return Infinity;
+  return miles(p, q);
+}
+
+/* Everyone within reach of one place — the mode Carlo wants once an
+   appointment has anchored him somewhere. Home stops mattering; the only
+   question is how far from THERE. */
+function nearFrom(city) {
+  var at = coordOf(city);
+  if (!at) return null;
+  return {
+    at: resolve(city),
+    test: function (other, opp, tune, kind) {
+      var p = coordOf(other);
+      if (!p) return { on: false, detour: Infinity };
+      var d = miles(at, p);
+      return { on: d <= radiusMiles(opp, tune, kind), detour: d };
+    }
+  };
+}
+
+/* Which regions you actually drive through, leaving Aptos. Straight-line
+   geometry does not know about the Bay or the Santa Cruz Mountains, which
+   is how "Redwood City is on the way to Oakland" happens — true as the crow
+   flies, absurd in a car. This table is the road network, coarsely.
+
+   Everything from Aptos leaves through Santa Cruz and, except for the run
+   south to Monterey, funnels over Highway 17 into the South Bay. From there
+   it forks: 280/101 up the Peninsula, or 880/680 up the East Bay.
+
+   Carlo knows this geography better than any model does. If a chip pulls in
+   somewhere he would never pass, this list is what to correct. */
+var THROUGH = {
+  'Santa Cruz':           ['Santa Cruz'],
+  'Monterey and Salinas': ['Santa Cruz', 'Monterey and Salinas'],
+  'South Bay':            ['Santa Cruz', 'South Bay'],
+  'SF and Peninsula':     ['Santa Cruz', 'South Bay', 'SF and Peninsula'],
+  'East Bay':             ['Santa Cruz', 'South Bay', 'East Bay'],
+  'Tri-Valley':           ['Santa Cruz', 'South Bay', 'East Bay', 'Tri-Valley'],
+  'Diablo Valley':        ['Santa Cruz', 'South Bay', 'East Bay', 'Tri-Valley', 'Diablo Valley'],
+  /* Carlo's North Bay run is a loop, not an out-and-back: north through
+     San Francisco because the Golden Gate takes no toll northbound, a night
+     at his mother's, then home down the East Bay because the Richmond
+     bridge takes no toll southbound. So the East Bay is on that trip too. */
+  'North Bay':            ['Santa Cruz', 'South Bay', 'SF and Peninsula', 'North Bay', 'East Bay'],
+  'Central Valley':       ['Santa Cruz', 'South Bay', 'East Bay', 'Tri-Valley', 'Central Valley']
+};
+
+
+/* Three Santa Cruz-county towns are on the way out of the county and four
+   are not. Watsonville, Freedom, Corralitos and La Selva Beach sit
+   south-east of Aptos — the wrong way for anything over the hill, but
+   directly on the road to Monterey. Felton, Ben Lomond and Boulder Creek
+   are up Highway 9 into the mountains, on the way to nowhere at all.
+
+   Carlo's own words: if he is going to service those areas it is on a day
+   he is not going over the mountain. */
+var SOUTH_COUNTY = { 'watsonville':1, 'freedom':1, 'corralitos':1, 'la selva beach':1 };
+var UP_HIGHWAY_9 = { 'felton':1, 'ben lomond':1, 'boulder creek':1 };
+
+function onRoute_(cityRegion, destRegion, cityName) {
+  var through = {};
+  (THROUGH[destRegion] || [destRegion]).forEach(function (r) { through[r] = 1; });
+  if (!through[cityRegion]) return false;
+  var n = String(cityName || '').toLowerCase();
+  if (UP_HIGHWAY_9[n] && destRegion !== 'Santa Cruz') return false;
+  if (SOUTH_COUNTY[n] && destRegion !== 'Santa Cruz' && destRegion !== 'Monterey and Salinas') return false;
+  return true;
+}
+
+/* Somewhere genuinely on the road can still show a few miles of "detour"
+   because the straight line cuts over the mountains while Highway 17 does
+   not. San Jose is 8 miles off the Aptos-to-Peninsula line and you drive
+   right through it. So anywhere inside a region the road passes through
+   gets at least this much slack before the order size has to justify it. */
+var ON_ROAD_SLACK = 12;
+
+/* A region is not a point. Monterey-and-Salinas runs sixty miles from
+   Pacific Grove to Gonzales, so measuring everyone in it against the middle
+   would make Carmel look like a detour on a Monterey day. Anywhere inside
+   the region you chose gets this much slack before the order size has to
+   argue for it — which still leaves Hollister, thirty-four miles east on
+   156, having to earn its way in. */
+var IN_REGION_SLACK = 35;
+
+/* Two places sit inside a region but nowhere near its road. Hollister is
+   thirty-four miles east of the Monterey run on 156, and Carlo flagged it
+   himself: "pretty far off the path to Monterey, so the order size would
+   have to make that detour worth the drive." They get no regional slack and
+   have to earn their way in like anywhere else. */
+var MUST_EARN = { 'hollister':1, 'gonzales':1 };
+
+
+/* "On the way to San Mateo" — same idea as a region chip but aimed at one
+   town. Gated by the same road table, and given the same on-road slack, so
+   Santa Cruz does not fall off a route that starts by driving through it. */
+function cityRoute(city, opts) {
+  var to = coordOf(city);
+  if (!to) return null;
+  var home = coordOf((opts && opts.home) || HOME);
+  var direct = miles(home, to);
+  var destRegion = REGION[String(resolve(city) || '').toLowerCase()] || '';
+  var through = {};
+  (THROUGH[destRegion] || [destRegion]).forEach(function (r) { through[r] = 1; });
+  return {
+    dest: resolve(city),
+    through: THROUGH[destRegion] || [destRegion],
+    test: function (other, opp, tune, kind) {
+      var p = coordOf(other);
+      if (!p) return { on: false, detour: Infinity };
+      var mine = REGION[String(other || '').toLowerCase()];
+      if (destRegion && !onRoute_(mine, destRegion, other)) return { on: false, detour: Infinity };
+      var detour = Math.max(0, miles(home, p) + miles(p, to) - direct);
+      var slack = Math.max(ON_ROAD_SLACK, detourMiles(opp, tune, kind));
+      return { on: detour <= slack, detour: detour };
+    }
+  };
+}
+
+/* The chip version: a corridor from Aptos through the middle of a region.
+   Anyone actually living in the region is on it by definition. */
+function regionRoute(region, opts) {
+  var c = CENTROID[region];
+  if (!c) return null;
+  var home = coordOf((opts && opts.home) || HOME);
+  var direct = miles(home, c);
+  var through = {};
+  (THROUGH[region] || [region]).forEach(function (r) { through[r] = 1; });
+  return {
+    region: region,
+    through: THROUGH[region] || [region],
+    test: function (city, opp, tune, kind) {
+      var p = coordOf(city);
+      if (!p) return { on: false, detour: Infinity };
+      var mine = REGION[String(city || '').toLowerCase()];
+      /* Not in a region the road passes through? Then you do not drive past
+         them, whatever the straight line says and whatever the order is
+         worth. This is what stops Redwood City turning up on the way to
+         Oakland, and Pleasanton on the way to the Peninsula. */
+      if (!onRoute_(mine, region, city)) return { on: false, detour: Infinity };
+      /* Being inside the destination region is not a free pass. Hollister
+         is in the Monterey region and sits twenty miles east on 156 — you
+         do not drive through it on the way to Carmel, so it has to earn the
+         detour like anywhere else. */
+      var detour = Math.max(0, miles(home, p) + miles(p, c) - direct);
+      var floor = MUST_EARN[String(city || '').toLowerCase()] ? ON_ROAD_SLACK
+                : (mine === region) ? IN_REGION_SLACK : ON_ROAD_SLACK;
+      var slack = Math.max(floor, detourMiles(opp, tune, kind));
+      return { on: detour <= slack, detour: detour };
+    }
+  };
+}
+
+window.__GEO={REGION:REGION,DRIVE:DRIVE,driveAllow:driveAllow,homeMiles:homeMiles,onRoute:onRoute_,THROUGH:THROUGH,CENTROID:CENTROID,allowedMiles:allowedMiles,detourMiles:detourMiles,radiusMiles:radiusMiles,between:between,nearFrom:nearFrom,regionRoute:regionRoute,cityRoute:cityRoute,AREA:AREA,regionForPhone:function(p){var d=String(p||'').replace(/\D/g,'');var ac=d.length>=10?d.slice(-10,-7):'';return AREA[ac]||'';},COORD:COORD,region:function(c){return REGION[String(c||"").toLowerCase()]||"";},resolve:resolve,corridorsFor:corridorsFor,citiesOn:citiesOn,miles:miles,coordOf:coordOf};
 })();
 
 </script>
@@ -716,10 +958,130 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if (bar) {
       bar.innerHTML = TABS.map(function (t, i) {
         return '<button class="tab" role="tab" aria-selected="' + (i === 0 ? 'true' : 'false') +
-               '" data-p="' + t.id + '">' + t.title + '<span class="n" data-n="' + t.id + '">0</span></button>';
-      }).join('') + '<button class="tab" role="tab" aria-selected="false" data-p="_setup">Setup</button>';
+               '" data-p="' + t.id + '">' + t.title +
+               (t.kind === 'plan' ? '' : '<span class="n" data-n="' + t.id + '">0</span>') +
+               '</button>';
+      }).join('');
     }
   })();
+
+
+  /* ── where will you be ────────────────────────────────────────
+     Two different questions, and Carlo spotted that I had them confused.
+
+       A REGION CHIP asks "who is on the way to the Peninsula and back?"
+       That is a corridor from Aptos through that region, and how far off
+       the road someone can be depends on how big their order is.
+
+       A TYPED CITY asks "who is near San Mateo?" — which is what matters
+       after an appointment has anchored him there. Home stops counting;
+       the only distance is from that city. It is the move that makes the
+       small orders worth clearing out, because he is already there.
+
+     The choice sticks until he changes it, because a Tuesday plan is still
+     true on Wednesday. */
+  var GEO_KEY = 'cc-deck-geo';
+  var GEOSET = null;
+  var rg = readKey(GEO_KEY); if (rg.ok && rg.val) GEOSET = rg.val;
+
+  var CHIPS = [
+    ['', 'Anywhere'],
+    ['Santa Cruz', 'Santa Cruz'],
+    ['South Bay', 'South Bay'],
+    ['SF and Peninsula', 'Peninsula'],
+    ['East Bay', 'East Bay'],
+    ['Tri-Valley', 'Tri-Valley'],
+    ['Diablo Valley', 'Diablo'],
+    ['Monterey and Salinas', 'Monterey'],
+    ['North Bay', 'North Bay'],
+    ['Central Valley', 'Valley']
+  ];
+
+  function saveGeo(){ try{ localStorage.setItem(GEO_KEY, JSON.stringify(GEOSET)); }catch(e){} }
+
+  function buildGeoBar(){
+    var bar = document.getElementById('geobar');
+    if (!bar) return;
+    var on = GEOSET || {};
+    bar.innerHTML =
+      '<div class="geochips">' +
+        CHIPS.map(function (c) {
+          var sel = (on.mode === 'region' && on.place === c[0]) || (!on.mode && !c[0]);
+          return '<button class="gc" data-region="' + hesc(c[0]) + '" aria-pressed="' +
+                 (sel ? 'true' : 'false') + '">' + hesc(c[1]) + '</button>';
+        }).join('') +
+        '<button class="gc gcelse" id="geoelse" aria-pressed="' +
+          (on.mode === 'near' || on.mode === 'route' ? 'true' : 'false') + '">' +
+          (on.mode === 'near' ? ('Near ' + hesc(on.place))
+           : on.mode === 'route' ? ('To ' + hesc(on.place)) : 'A city&hellip;') +
+        '</button>' +
+      '</div>' +
+      '<div class="geocity" id="geocity" hidden>' +
+        '<input id="geoin" type="text" placeholder="City you will be in&hellip;" ' +
+          'autocapitalize="words" autocorrect="off" spellcheck="false" ' +
+          'value="' + hesc(on.place || '') + '">' +
+        '<div class="dayrow">' +
+          '<button class="daybtn primary" id="geonear">I am there &mdash; who is close?</button>' +
+          '<button class="daybtn" id="georoute">On the way there</button>' +
+          '<button class="daybtn" id="geoclear">Clear</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function makeGeo(mode, place){
+    if (!place) return null;
+    if (mode === 'near' && GEO.nearFrom) {
+      var n = GEO.nearFrom(place);
+      return n ? { kind: 'near', place: place, f: n } : null;
+    }
+    if (mode === 'region' && GEO.regionRoute) {
+      var g = GEO.regionRoute(place);
+      return g ? { kind: 'region', place: place, f: g } : null;
+    }
+    if (GEO.cityRoute) {
+      var c = GEO.cityRoute(place);
+      return c ? { kind: 'route', place: place, f: c } : null;
+    }
+    return null;
+  }
+  function geoFilter(){
+    return GEOSET ? makeGeo(GEOSET.mode, GEOSET.place) : null;
+  }
+
+  function geoLabel(){
+    if (!GEOSET || !GEOSET.place) return '';
+    if (GEOSET.mode === 'near')   return 'Near ' + GEOSET.place;
+    if (GEOSET.mode === 'route')  return 'On the way to ' + GEOSET.place;
+    return 'On the way to the ' + GEOSET.place;
+  }
+
+  document.addEventListener('click', function (e) {
+    var chip = e.target.closest && e.target.closest('.gc[data-region]');
+    if (chip) {
+      var v = chip.dataset.region;
+      GEOSET = v ? { mode: 'region', place: v } : null;
+      saveGeo(); buildGeoBar(); countTabs(); applyQuery(selTab()); filter();
+      return;
+    }
+    if (e.target.id === 'geoelse') {
+      var box = document.getElementById('geocity');
+      if (box) { box.hidden = !box.hidden; if (!box.hidden) document.getElementById('geoin').focus(); }
+      return;
+    }
+    if (e.target.id === 'geonear' || e.target.id === 'georoute') {
+      var city = (document.getElementById('geoin') || {}).value || '';
+      city = city.trim();
+      if (!city) return;
+      var known = GEO.resolve ? GEO.resolve(city) : city;
+      if (!known) { banner('I do not have coordinates for "' + city + '". Try the nearest larger town.'); return; }
+      GEOSET = { mode: e.target.id === 'geonear' ? 'near' : 'route', place: known };
+      saveGeo(); buildGeoBar(); countTabs(); applyQuery(selTab()); filter();
+      return;
+    }
+    if (e.target.id === 'geoclear') {
+      GEOSET = null; saveGeo(); buildGeoBar(); countTabs(); applyQuery(selTab()); filter();
+    }
+  }, false);
 
   /* ── the query engine ────────────────────────────────────────── */
   function lc(x) { return String(x || '').trim().toLowerCase(); }
@@ -736,54 +1098,102 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return Math.round((today - t) / 86400000);
   }
 
+  /* Campaign I is Jan-Apr, II is May-Aug, III is Sep-Dec. */
+  function campaignEnd(d){
+    var m=d.getMonth(), endM = m<4 ? 3 : (m<8 ? 7 : 11);
+    return new Date(d.getFullYear(), endM+1, 0, 23, 59, 59).getTime();
+  }
+  function monthEnd(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59).getTime(); }
+
+  /* Stages that mean they have bought. ABR lives here; Biz Gifts is
+     everyone on the business side who has not. */
+  var BOUGHT = {'customer - active':1,'won':1};
+  function hasBought(c){ return !!BOUGHT[lc(c.stage)]; }
+
   function evalTab(id) {
     var tab = TABBY[id] || {}, q = tab.q || {};
     var day = (plan && plan.q) ? plan.q : (plan || {});
-    var dests = (q.corridor && q.corridor.length) ? q.corridor : (day.corridor || []);
-    var corr = (dests && dests.length && GEO.corridorsFor) ? GEO.corridorsFor(dests) : null;
-    var t0 = new Date(); t0.setHours(0, 0, 0, 0); t0 = t0.getTime();
+    var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    var now = t0.getTime();
+    /* A tab can name its own destination — that is how a pasted day code
+       pins a route. Otherwise the chip row decides. */
+    var geo = (q.geo === false) ? null
+            : (q.corridor && q.corridor.length) ? makeGeo('route', q.corridor[0])
+            : (day.corridor && day.corridor.length && q.dayGeo !== false) ? makeGeo('route', day.corridor[0])
+            : geoFilter();
     var pins = {};
     if (q.pinned !== false && day.ids) day.ids.forEach(function (x, i) { pins[x] = day.ids.length - i; });
 
-    var out = [], offCorridor = 0, noCity = 0;
+    var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0;
     DATA.contacts.forEach(function (c) {
       if (q.kind && q.kind !== 'any' && c.k !== q.kind) return;
+      if (q.bought === true  && !hasBought(c)) return;
+      if (q.bought === false &&  hasBought(c)) return;
       if (q.stageNot && q.stageNot.map(lc).indexOf(lc(c.stage)) > -1) return;
-      if (q.stageIn && q.stageIn.map(lc).indexOf(lc(c.stage)) < 0) return;
+      if (q.stageIn  && q.stageIn.map(lc).indexOf(lc(c.stage)) < 0) return;
 
-      var due = dueDays(c.fu, t0);
+      var due = dueDays(c.fu, now);
       var overdue = due !== null && due < 0;
       if (q.due === 'overdue' && !overdue) return;
       if (q.due === 'today'   && !(due !== null && due <= 0)) return;
       if (q.due === 'week'    && !(due !== null && due <= 7)) return;
-      if (q.due === 'month'   && !(due !== null && due <= 31)) return;
-      if (q.untouched && sinceDays(c.last, t0) < q.untouched) return;
-      if (q.abrDue) {
-        var m = String(c.abr || '');
-        if (!m) return;
-      }
+      if (q.due === 'month'   && !(due !== null && new Date(c.fu+'T12:00:00').getTime() <= monthEnd(t0))) return;
+      if (q.due === 'campaign'&& !(due !== null && new Date(c.fu+'T12:00:00').getTime() <= campaignEnd(t0))) return;
+      if (q.untouched && sinceDays(c.last, now) < q.untouched) return;
 
-      var detour = 0;
-      if (corr) {
-        if (!c.city) { noCity++; return; }
-        var r = corr.test(c.city);
-        if (!r.on) { offCorridor++; return; }
-        detour = r.detour;
+      /* A promise beats the plan. Carlo's rule: if someone asked to be
+         called in March, they get called in March whether or not March has
+         any dollars budgeted against their channel. Anyone due, and anyone
+         hot at or above an average order, is exempt from every filter
+         below — including geography. A hot lead does not stop being hot
+         because he is driving the other way. */
+      var hot = (c.int || 0) >= 4 && (c.tf || 0) >= 4 && (c.init || 0) >= (DATA.avgOrder || 500);
+      var must = overdue || (due !== null && due <= 0) || hot || pins[c.id];
+
+      /* Geography filters everyone, including people who are owed a call.
+         That is deliberate and it took a wrong turn to see it: the point of
+         picking a region is to spend the day's calls where the appointments
+         will cluster, and a filter that exempts every overdue contact
+         filters nothing at all. What the deck must never do is drop someone
+         owed a call SILENTLY — so they are counted and named in the note
+         above the list. */
+      var away = 0;
+      if (geo && geo.f) {
+        if (!c.city) { noCity++; if (must) mustOff++; return; }
+        var r = geo.f.test(c.city, c.init || 0, null, c.k);
+        if (!r.on) { offRoute++; if (must) mustOff++; return; }
+        away = r.detour;
+      } else if (q.homeDistance !== false && c.city && GEO.between && GEO.homeMiles) {
+        /* No route picked, so the question is simply whether this is worth a
+           trip from Aptos at all. A $200 paring knife in Sacramento is not.
+           A business gift over $1,000 always is, because it can close on a
+           Zoom call and the account buys again — Carlo's rule, and the
+           reason business and residential get different tables.
+
+           Unlike a chip, this filter never buries a promise: anyone owed a
+           call or running hot is exempt, because the passive default should
+           not quietly drop someone he said he would ring. */
+        var fromHome = GEO.between('Aptos', c.city);
+        if (!must && fromHome > GEO.homeMiles(c.init || 0, null, c.k)) { tooFar++; return; }
+        away = fromHome;
       }
       if (q.cities && q.cities.length && q.cities.map(lc).indexOf(lc(c.city)) < 0) return;
 
-      /* The floor is Carlo's "or not included at all". An overdue hot lead
-         is never floored out — the standing rule says it outranks its own
-         score, so it certainly outranks a cutoff. */
-      var hot = overdue && (c.int || 0) >= 4;
-      if (q.minScore && (c.ps || 0) < q.minScore && !hot && !pins[c.id]) return;
+      /* The floor is "or not included at all" — but it never buries someone
+         who is owed a call. */
+      if (q.minScore && (c.ps || 0) < q.minScore && !must) return;
 
-      out.push({ id: c.id, c: c, due: due, detour: detour, hot: hot, pin: pins[c.id] || 0 });
+      out.push({ id: c.id, c: c, due: due, detour: away, hot: hot, must: !!must, pin: pins[c.id] || 0 });
     });
 
     var sort = q.sort || 'score';
     out.sort(function (a, b) {
       if (a.pin !== b.pin) return b.pin - a.pin;
+      /* Owed a call outranks everything, then hot, then the score, which is
+         already interest and order size combined. Distance only ever breaks
+         a tie — it decides who is eligible, never who is first. */
+      var ao = (a.due !== null && a.due <= 0) ? 1 : 0, bo = (b.due !== null && b.due <= 0) ? 1 : 0;
+      if (ao !== bo) return bo - ao;
       if (a.hot !== b.hot) return a.hot ? -1 : 1;
       if (sort === 'fu') {
         var ad = a.due === null ? 99999 : a.due, bd = b.due === null ? 99999 : b.due;
@@ -791,37 +1201,40 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       } else if (sort === 'value') {
         var av = (a.c.life || 0) + (a.c.init || 0), bv = (b.c.life || 0) + (b.c.init || 0);
         if (av !== bv) return bv - av;
-      } else if (sort === 'detour') {
+      } else if (sort === 'near') {
         if (a.detour !== b.detour) return a.detour - b.detour;
       }
       var ap = a.c.ps || 0, bp = b.c.ps || 0;
       if (ap !== bp) return bp - ap;
-      return a.detour - b.detour;          /* the cheaper stop breaks the tie */
+      return a.detour - b.detour;
     });
 
     if (q.cap && out.length > q.cap) out = out.slice(0, q.cap);
 
-    /* The target is a LINE, not a cutoff. Carlo's words: if the day is going
-       well he wants the next fifty people already there. */
-    var want = q.target || day.target || null;
+    /* The target is a LINE, not a cutoff, and it comes from Carlo's own
+       plan — dollars and his conversion assumptions, computed by the
+       bridge. Nobody types a call target anywhere. */
+    var want = q.target || null;
+    if (!want && q.targetFrom && DATA.targets && DATA.targets.ok) want = DATA.targets[q.targetFrom];
+    if (!want && day.target) want = day.target;
+
     var mark = -1, shortBy = null;
-    if (want) {
-      var need = (typeof want === 'number') ? { any: want }
-               : { b: want.b || 0, r: want.r || 0 };
-      var got = { b: 0, r: 0, any: 0 };
+    if (want && (want.b || want.r)) {
+      var need = { b: want.b || 0, r: want.r || 0 };
+      var got = { b: 0, r: 0 };
       for (var i = 0; i < out.length; i++) {
-        got[out[i].c.k]++; got.any++;
-        var done = ('any' in need) ? (got.any >= need.any)
-                 : (got.b >= need.b && got.r >= need.r);
-        if (done) { mark = i; break; }
+        got[out[i].c.k]++;
+        if (got.b >= need.b && got.r >= need.r) { mark = i; break; }
       }
-      if (mark < 0) {
-        shortBy = ('any' in need) ? (need.any - got.any)
-                : Math.max(0, need.b - got.b) + Math.max(0, need.r - got.r);
-      }
+      if (mark < 0) shortBy = Math.max(0, need.b - got.b) + Math.max(0, need.r - got.r);
     }
-    return { rows: out, mark: mark, shortBy: shortBy, dests: dests,
-             offCorridor: offCorridor, noCity: noCity };
+    var label = !geo ? ''
+      : geo.kind === 'near'   ? ('Near ' + geo.place)
+      : geo.kind === 'region' ? ('On the way to the ' + geo.place)
+      : ('On the way to ' + geo.place);
+    return { rows: out, mark: mark, shortBy: shortBy, want: want,
+             geo: label, offRoute: offRoute, noCity: noCity, mustOff: mustOff,
+             tooFar: tooFar };
   }
 
   var cards=[].slice.call(document.querySelectorAll('.card'));
@@ -1469,14 +1882,26 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
 
   function setTab(name){
+    var tab=TABBY[name]||null;
+    var isPlan = tab && tab.kind==='plan';
     [].forEach.call(document.querySelectorAll('.tab'),function(x){
       x.setAttribute('aria-selected', x.dataset.p===name?'true':'false');
     });
     var deck=document.getElementById('deckpanel');
-    if(deck) deck.dataset.p = TABBY[name] ? name : '_none';
+    if(deck) deck.dataset.p = (tab && !isPlan) ? name : '_none';
+    var pp=document.querySelector('.panel[data-p="plan"]');
+    if(pp) pp.dataset.p = isPlan ? name : 'plan';
+
+    /* Carlo asked for sync settings and the day code at the bottom of the
+       Today tab, not off in a Setup tab of their own. They also appear when
+       nothing loaded, because that is exactly when he needs them. */
     var setup=document.getElementById('setupwrap');
-    if(setup) setup.hidden = (name!=='_setup');
-    if(TABBY[name]) applyQuery(name);
+    if(setup) setup.hidden = !(name==='today' || !DATA.contacts.length);
+
+    var gb=document.getElementById('geobar');
+    if(gb) gb.hidden = isPlan || !(tab && tab.q && tab.q.geo!==false);
+
+    if(tab && !isPlan) applyQuery(name);
     [].forEach.call(document.querySelectorAll('.panel'),function(p){
       p.hidden = p.dataset.p!==name;
     });
@@ -1517,10 +1942,16 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var note=document.getElementById('tabnote');
     if(note){
       var bits=[];
-      if(res.dests && res.dests.length) bits.push('On the way to '+res.dests.join(' and ')+
-        (res.offCorridor?(' · '+res.offCorridor+' too far off the route'):'')+
+      if(res.geo) bits.push('<b>'+res.geo+'</b>'+
+        (res.offRoute?(' · '+res.offRoute+' too far to be worth the drive'):'')+
         (res.noCity?(' · '+res.noCity+' with no city on the row'):''));
-      if(res.shortBy) bits.push('Short of the target by '+res.shortBy+' — the pipeline does not hold enough people who qualify.');
+      /* Never let a promise disappear behind a filter without saying so. */
+      if(res.mustOff) bits.push('<b class="warn">'+res.mustOff+' owed a call are off this route.</b> '+
+        'Tap Anywhere to see them.');
+      if(res.tooFar) bits.push(res.tooFar+' too far from home to be worth the drive for what they are worth. '+
+        'Pick a region to plan a trip out there.');
+      if(res.want) bits.push('Plan says '+(res.want.b||0)+' business and '+(res.want.r||0)+
+        ' residential'+(res.shortBy?(' — the pipeline is '+res.shortBy+' short of that'):''));
       note.innerHTML=bits.join('<br>');
       note.hidden=!bits.length;
     }
@@ -1531,6 +1962,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   /* Every tab's count, so the bar tells the truth before it is tapped. */
   function countTabs(){
     TABS.forEach(function(t){
+      if(t.kind==='plan') return;
       var n=document.querySelector('[data-n="'+t.id+'"]');
       if(n) n.textContent=evalTab(t.id).rows.length;
     });
@@ -1810,8 +2242,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   applyPlan(); renderPlanDoc(); applySecs(); cards.forEach(paint); counts(); syncState();
   if(!storageOK) banner(storageNote);
   else if(archived) banner('Yesterday’s '+archived+' logged contact'+(archived===1?'':'s')+' moved into history. Cards are clean.',true);
+  buildGeoBar();
   countTabs();
-  setTab(TABS[0] ? TABS[0].id : '_setup');
+  setTab(TABS[0] ? TABS[0].id : 'today');
   if(DATA.stale) banner('Showing the copy saved on this phone — '+(DATA.why||'the bridge did not answer')+'. Pull to refresh when you have signal.');
   else if(DATA.notes && DATA.notes.length) banner(DATA.notes.join(' · '));
   else if(DATA.gaps && DATA.gaps.length) banner(DATA.gaps.length+' contacts have no call outline written yet. Ask for them in the Command Center project.',true);
@@ -2167,6 +2600,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       }
       window.__deckData = {
         contacts: d.roster.contacts,
+        targets: d.roster.targets || null,
+        avgOrder: d.roster.avgOrder || 500,
         cards: (d.content && d.content.cards) || {},
         tabs: (d.content && d.content.tabs) || null,
         notes: d.roster.notes || [],
