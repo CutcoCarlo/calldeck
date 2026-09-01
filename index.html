@@ -473,7 +473,6 @@ html,body{overflow-x:hidden;max-width:100%}
 .dim{color:var(--ink-3)}
 .tabs .tab .n{opacity:.65}
 </style>
-
 <script>
 /* generated from geo.js + corridor.js — do not hand-edit */
 (function(){
@@ -811,7 +810,6 @@ function regionRoute(region, opts) {
 
 window.__GEO={REGION:REGION,DRIVE:DRIVE,driveAllow:driveAllow,homeMiles:homeMiles,onRoute:onRoute_,THROUGH:THROUGH,CENTROID:CENTROID,allowedMiles:allowedMiles,detourMiles:detourMiles,radiusMiles:radiusMiles,between:between,nearFrom:nearFrom,regionRoute:regionRoute,cityRoute:cityRoute,AREA:AREA,regionForPhone:function(p){var d=String(p||'').replace(/\D/g,'');var ac=d.length>=10?d.slice(-10,-7):'';return AREA[ac]||'';},COORD:COORD,region:function(c){return REGION[String(c||"").toLowerCase()]||"";},resolve:resolve,corridorsFor:corridorsFor,citiesOn:citiesOn,miles:miles,coordOf:coordOf};
 })();
-
 </script>
 <script>
 
@@ -1110,6 +1108,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var BOUGHT = {'customer - active':1,'won':1};
   function hasBought(c){ return !!BOUGHT[lc(c.stage)]; }
 
+  /* Local calendar date, not UTC. After 5pm Pacific the UTC date has already
+     rolled over, and a plan built for "today" would look like yesterday's. */
+  function ymdLocal(d) {
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
   function evalTab(id) {
     var tab = TABBY[id] || {}, q = tab.q || {};
     var day = (plan && plan.q) ? plan.q : (plan || {});
@@ -1124,8 +1129,28 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var pins = {};
     if (q.pinned !== false && day.ids) day.ids.forEach(function (x, i) { pins[x] = day.ids.length - i; });
 
+    /* Today is a closed list, not a backlog.
+       A list you cannot finish is not a plan, and seeing 146 overdue every
+       morning is demotivating in a way that costs more than the calls it
+       surfaces. So when a plan exists for TODAY, this tab is exactly that
+       plan and nothing else. The overdue universe is still one tap away in
+       the Biz Gifts, ABR and Residential tabs, which are ranked so the best
+       next call is always on top.
+
+       When there is no plan for today the tab must not be empty either, so
+       it falls back to the same ranking, capped, and says which mode it is
+       in. Never infinite, never blank, never lying about which it is. */
+    var planIsForToday = false;
+    if (q.planOnly && day.ids && day.ids.length) {
+      var pd = String(plan && plan.date || day.date || '').slice(0, 10);
+      planIsForToday = !pd || pd === ymdLocal(t0);
+    }
+    var planSet = null;
+    if (planIsForToday) { planSet = {}; day.ids.forEach(function (x) { planSet[x] = 1; }); }
+
     var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0;
     DATA.contacts.forEach(function (c) {
+      if (planSet && !planSet[c.id]) return;      /* Today = the plan, full stop */
       if (q.kind && q.kind !== 'any' && c.k !== q.kind) return;
       if (q.bought === true  && !hasBought(c)) return;
       if (q.bought === false &&  hasBought(c)) return;
@@ -1187,11 +1212,39 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     });
 
     var sort = q.sort || 'score';
+
+    /* One ranking for the three queue tabs, so "the top of any tab" always
+       means the same thing: the best person to call next.
+
+       Priority Score already carries opportunity size, interest and
+       timeframe, and it is what research corrects when it finds that the
+       lead written up as a $1,000 gym owner also runs a $42M brokerage.
+       Two things it does not carry are added here:
+
+         overdue  - how far past due, at a third of a point a day and capped
+                    at 90. A row that has been rotting for two years must
+                    rise, but it must never outrank a live hot lead.
+         promise  - due within three days either way. Somebody who asked to
+                    be called this week gets called this week. */
+    function callRank(x) {
+      var r = x.c.ps || 0;
+      if (x.due !== null) {
+        if (x.due < 0) r += Math.min(-x.due, 90) * 0.35;
+        if (x.due >= -3 && x.due <= 3) r += 15;
+      }
+      return r;
+    }
+
     out.sort(function (a, b) {
       if (a.pin !== b.pin) return b.pin - a.pin;
       /* Owed a call outranks everything, then hot, then the score, which is
          already interest and order size combined. Distance only ever breaks
          a tie — it decides who is eligible, never who is first. */
+      if (sort === 'next') {
+        var ar = callRank(a), br = callRank(b);
+        if (ar !== br) return br - ar;
+        return a.detour - b.detour;
+      }
       var ao = (a.due !== null && a.due <= 0) ? 1 : 0, bo = (b.due !== null && b.due <= 0) ? 1 : 0;
       if (ao !== bo) return bo - ao;
       if (a.hot !== b.hot) return a.hot ? -1 : 1;
@@ -1209,7 +1262,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       return a.detour - b.detour;
     });
 
-    if (q.cap && out.length > q.cap) out = out.slice(0, q.cap);
+    /* The cap is the fallback's safety net, not the plan's. When Today IS
+       the plan, the plan already decided how many calls fit the day. */
+    if (q.cap && !planIsForToday && out.length > q.cap) out = out.slice(0, q.cap);
 
     /* The target is a LINE, not a cutoff, and it comes from Carlo's own
        plan — dollars and his conversion assumptions, computed by the
@@ -2034,7 +2089,25 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(SECS[k]===d.open) return;
     SECS[k]=d.open;
     try{ localStorage.setItem(SECKEY,JSON.stringify(SECS)); }catch(err){}
+
+    /* Opening a section opens it on EVERY card, which is what makes the
+       preference worth having — one tap sets how all 111 cards read. But
+       every card above the one being tapped changes height at the same
+       moment, so the page grows underneath the finger and the view lands
+       on a different contact. Carlo tapped Jennifer Rincon and ended up
+       looking at somebody else.
+
+       Fix: measure where the tapped card sits before the reflow, and
+       scroll by exactly the amount it moved. The card stays put and the
+       rest of the page rearranges around it. */
+    var card = d.closest ? d.closest('article') : null;
+    var beforeTop = card ? card.getBoundingClientRect().top : null;
     suppressToggle=true; applySecs(); suppressToggle=false;
+    if(card && beforeTop !== null){
+      var afterTop = card.getBoundingClientRect().top;
+      var shift = afterTop - beforeTop;
+      if(shift) window.scrollBy(0, shift);
+    }
   },true);
   var suppressToggle=false;
 
@@ -2251,7 +2324,6 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   fetchPlan(false);
   if(queue.length) flush(false);
 };
-
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
@@ -2622,7 +2694,6 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
-
 </script>
 
 
