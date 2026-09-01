@@ -179,6 +179,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:500;letter-spacing:.04em;padding:3px 7px;
   border-radius:4px;background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line)}
 .tag.late{background:var(--late-soft);color:var(--late);border-color:transparent;font-weight:600}
+/* a date Carlo just set, still ahead of him: confirmation, not alarm */
+.tag.soon{background:rgba(46,90,168,.12);color:#2e5aa8;border-color:transparent;font-weight:600}
 .tag.hot{background:var(--brass-soft);color:var(--brass);border-color:transparent;font-weight:600}
 
 .tel{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:var(--ink);
@@ -1321,6 +1323,36 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var iso=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
       w.setAttribute('aria-pressed', (st.d===iso)?'true':'false');
     });
+    paintFu(c,st);
+  }
+
+  /* The chip on the card face reads from the pipeline, and the pipeline does
+     not hear about a date until the bridge next runs. So for a minute or an
+     hour the card kept saying "84 days overdue" about a contact Carlo had
+     just rescheduled, which is exactly the doubt that makes someone set the
+     same date twice. Show what he just chose, immediately. */
+  var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function paintFu(c,st){
+    if(c.dataset.fu0===undefined) c.dataset.fu0=c.dataset.fu||'';
+    var eff=(st&&st.d)||c.dataset.fu0||'';
+    c.dataset.fu=eff;
+    var tags=c.querySelector('.tags'); if(!tags) return;
+    var chip=tags.querySelector('[data-fuchip]');
+    if(!eff){ if(chip) chip.parentNode.removeChild(chip); return; }
+    var t=new Date(eff+'T12:00:00'); if(isNaN(t)) return;
+    var now=new Date(); now.setHours(12,0,0,0);
+    var days=Math.round((now-t)/86400000);
+    var late=days>0, txt;
+    if(late) txt=days+' day'+(days===1?'':'s')+' overdue';
+    else if(days===0) txt='due today';
+    else txt='due '+MON[t.getMonth()]+' '+t.getDate();
+    if(!chip){
+      chip=document.createElement('span');
+      chip.setAttribute('data-fuchip','');
+      tags.insertBefore(chip,tags.firstChild);
+    }
+    chip.className='tag'+(late?' late':' soon');
+    chip.textContent=txt;
   }
 
   /* ── where people are, and who else is near them ───────────────
@@ -1578,14 +1610,23 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       save(); push(id); paint(c); counts(); filter();
     });
     /* Quick follow-up dates. The pipeline audit found only 1.4% of the book
-       carries a date inside the month; this is the field that fixes that. */
+       carries a date inside the month; this is the field that fixes that.
+
+       Tapping the same chip again clears the date, exactly the way LM and
+       TX clear themselves. Every other control on this card toggles, so a
+       chip that only ever sets is a trap: a mis-tap becomes a commitment
+       Carlo cannot take back from the card he is standing on, and this
+       date now drives what the pipeline says to call tomorrow. A wrong
+       date is worse than no date, because it looks handled. */
     c.addEventListener('click',function(e){
       var w=e.target.closest('.wc'); if(!w) return;
       var d=new Date(); d.setDate(d.getDate()+Number(w.dataset.when||1));
       var iso=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
       var id=c.dataset.id; state[id]=state[id]||{};
-      state[id].d=iso; state[id].t=Date.now();
-      var f=c.querySelector('.wdate'); if(f) f.value=iso;
+      var off=(state[id].d===iso);
+      state[id].d = off ? '' : iso;
+      state[id].t = Date.now();
+      var f=c.querySelector('.wdate'); if(f) f.value=state[id].d;
       save(); push(id); paintWhen(c,state[id]);
     });
     /* Notes used to write the whole store on every keystroke. On a phone that
@@ -1597,6 +1638,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         state[id][f.dataset.f]=f.value; state[id].t=Date.now();
         clearTimeout(timers[f.dataset.f]);
         var isCity=f.dataset.f==='c';
+        if(f.dataset.f==='d') paintFu(c,state[id]);
         timers[f.dataset.f]=setTimeout(function(){
           save(); push(id); paintHistory(c,state[id]||{});
           /* a city typed here changes who is "near" everyone else */
@@ -2435,11 +2477,17 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function results(name) {
     return '<details class="sec" data-sec="results"><summary>Results</summary><div class="inner">' +
       '<div class="frow"><span class="flbl">Notes</span><textarea class="note fi" data-f="x" rows="2" placeholder="what you learned…" aria-label="Notes for ' + esc(name) + '"></textarea></div>' +
-      '<div class="frow"><span class="flbl">Next</span><input class="note fi" data-f="a" type="text" placeholder="next action step…" aria-label="Next action for ' + esc(name) + '"></div>' +
-      '<div class="whenrow"><span class="flbl">When</span><div class="whenchips">' +
+      '<div class="frow"><span class="flbl">Next step</span><input class="note fi" data-f="a" type="text" placeholder="what happens next…" aria-label="Next step for ' + esc(name) + '"></div>' +
+      /* The date is the control that decides when this card comes back, so
+         it gets its own labelled row and the full width. Buried at the tail
+         of the chip row it read as decoration, and Carlo typed dates into
+         the text field above instead — which no plan has ever read. The
+         chips are what they always were: shortcuts for the common cases. */
+      '<div class="frow"><span class="flbl">Next FU date</span>' +
+      '<input class="wdate fi" data-f="d" type="date" aria-label="Follow-up date for ' + esc(name) + '"></div>' +
+      '<div class="whenrow"><span class="flbl"></span><div class="whenchips">' +
       '<button class="wc" data-when="1">Tomorrow</button><button class="wc" data-when="3">3 days</button>' +
       '<button class="wc" data-when="7">Next week</button><button class="wc" data-when="30">A month</button>' +
-      '<input class="wdate fi" data-f="d" type="date" aria-label="Follow-up date for ' + esc(name) + '">' +
       '</div></div></div></details>';
   }
 
@@ -2545,7 +2593,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
        computes that chip itself rather than waiting for someone to write it. */
     if (c.fu) {
       var days = Math.floor((Date.now() - new Date(c.fu + 'T12:00:00').getTime()) / 86400000);
-      if (days > 0) tags = '<span class="tag late">' + days + ' day' + (days === 1 ? '' : 's') + ' overdue</span>' + tags;
+      if (days > 0) tags = '<span class="tag late" data-fuchip>' + days + ' day' + (days === 1 ? '' : 's') + ' overdue</span>' + tags;
     }
 
     var lead = '<details class="sec" data-sec="lead"><summary>Lead info</summary><div class="inner">' +
