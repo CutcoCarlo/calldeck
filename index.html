@@ -273,6 +273,9 @@ textarea.note{resize:vertical;min-height:38px;line-height:1.45;font-family:inher
   border-left:3px solid var(--brass);padding:11px 13px;border-radius:0 8px 8px 0;margin:8px 0 0}
 .psec{display:flex;flex-direction:column;gap:10px}
 .psec h3{font-size:16px;font-weight:700;border-bottom:1px solid var(--line-strong);padding-bottom:7px;margin:0}
+.planswitch{margin-bottom:-6px}
+.planswitch .wc.on{background:var(--brass);color:#fff;border-color:var(--brass)}
+.poc p.dim{margin:2px 0 0;font-family:"IBM Plex Mono",monospace;font-size:13px}
 .poc{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start}
 .poc .pn{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;width:23px;height:23px;
   border-radius:5px;display:flex;align-items:center;justify-content:center;
@@ -817,9 +820,9 @@ window.__GEO={REGION:REGION,DRIVE:DRIVE,driveAllow:driveAllow,homeMiles:homeMile
 <script>
 
 window.__initDeck=function(){
-  var KEY='cc-calldeck-v1', TKEY='cc-calldeck-day', SKEY='cc-deck-sync',
+  var KEY='cc-calldeck-v1', TKEY='cc-calldeck-day', NKEY='cc-calldeck-next', SKEY='cc-deck-sync',
       QKEY='cc-deck-queue-v1', SNAP='cc-deck-snap-', SALV='cc-deck-salvage',
-      state={}, plan=null;
+      state={}, plan=null, nextPlan=null;
 
   /* ── storage: read once, honestly ──────────────────────────────
      v5.0. On 08/27/26 a corrupt or evicted key became an empty object,
@@ -850,6 +853,11 @@ window.__initDeck=function(){
 
   var rp=readKey(TKEY);
   plan = rp.ok ? (rp.val||null) : null;
+  /* Tomorrow's plan, kept apart from today's. The Plan tab previews it
+     the night before; Today keeps running on `plan` until the date turns,
+     which is the Sep 1 wipe fixed the right way round. */
+  var rn=readKey(NKEY);
+  nextPlan = rn.ok ? (rn.val||null) : null;
   /* migrate v2 single-status entries (st.s) to the v2.1 multi-status set (st.m) */
   (function(){
     for(var k in state){
@@ -920,6 +928,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
   function savePlan(){
     try{ if(plan){ localStorage.setItem(TKEY,JSON.stringify(plan)); } else { localStorage.removeItem(TKEY); } }catch(e){}
+    try{ if(nextPlan){ localStorage.setItem(NKEY,JSON.stringify(nextPlan)); } else { localStorage.removeItem(NKEY); } }catch(e){}
   }
   function midnight(){ var n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(); }
   function ymdLocalNow_(){ var d=new Date(); return d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()); }
@@ -1742,17 +1751,50 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  /* Which plan the Plan tab is showing: 'today' or 'next'. Tomorrow's is
+     the default whenever one exists, because the only time it exists is
+     the evening before, and that is when Carlo does his homework. */
+  var planView='next';
+  function fmtDay(ymd){
+    if(!ymd) return '';
+    var d=new Date(ymd+'T12:00:00');
+    return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]+' '+(d.getMonth()+1)+'/'+d.getDate();
+  }
+  function callListHtml(p){
+    if(!p||!p.ids||!p.ids.length) return '';
+    var h='<div class="psec"><h3>Call list · '+p.ids.length+' in order</h3>';
+    var missing=0;
+    p.ids.forEach(function(id,i){
+      var c=CON[id]; if(!c){ missing++; return; }
+      var who=hesc(c.n||id)+(c.co?' <span class="dim">· '+hesc(c.co)+'</span>':'');
+      var why=hesc(c.act||c.want||'');
+      h+='<div class="poc"><span class="pn">'+(i+1)+'</span><div><b>'+who+'</b>'
+        +(c.ph?'<p class="dim">'+hesc(c.ph)+'</p>':'')
+        +(why?'<p>'+why+'</p>':'')+'</div></div>';
+    });
+    if(missing) h+='<div class="ptask">'+missing+' name'+(missing===1?'':'s')+' on the plan '+(missing===1?'is':'are')+' not on this deck yet. Refresh deck.</div>';
+    return h+'</div>';
+  }
   function renderPlanDoc(){
     var host=document.getElementById('planbrief');
     if(!host) return;
-    var d=plan && plan.doc;
+    var showNext = !!(nextPlan && nextPlan.doc && planView==='next');
+    var src = showNext ? nextPlan : plan;
+    var d=src && src.doc;
+    var sw='';
+    if(nextPlan && nextPlan.doc){
+      sw='<div class="whenchips planswitch">'
+        +'<button class="wc'+(showNext?'':' on')+'" data-pv="today">Today</button>'
+        +'<button class="wc'+(showNext?' on':'')+'" data-pv="next">Tomorrow · '+hesc(fmtDay(nextPlan.date))+'</button></div>';
+    }
     if(!d){
-      host.innerHTML='<div class="intro"><span class="eyebrow">Daily plan</span>'
+      host.innerHTML=sw+'<div class="intro"><span class="eyebrow">Daily plan</span>'
         +'<h2>No briefing loaded</h2>'
         +'<p>Your plan brief arrives with the morning deck push. Say "plan my day" to Claude and it lands here.</p></div>';
       return;
     }
-    var h='<div class="intro"><span class="eyebrow">'+hesc(d.eyebrow||'Daily plan')+'</span>'
+    var h=sw+'<div class="intro"><span class="eyebrow">'+hesc(d.eyebrow||'Daily plan')
+      +(showNext?' · PREVIEW, Today switches over in the morning':'')+'</span>'
       +'<h2>'+hesc(d.title||'Today')+'</h2>'
       +(d.number?'<p class="pnum">'+hesc(d.number)+'</p>':'')+'</div>';
     if(d.outcomes && d.outcomes.length){
@@ -1775,8 +1817,24 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       d.tasks.forEach(function(t){ h+='<div class="ptask">'+hesc(t)+'</div>'; });
       h+='</div>';
     }
+    if(showNext) h+=callListHtml(nextPlan);
     if(d.quote){ h+='<p class="pquote">'+hesc(d.quote)+'</p>'; }
     host.innerHTML=h;
+    [].forEach.call(host.querySelectorAll('[data-pv]'),function(b){
+      b.addEventListener('click',function(){ planView=b.dataset.pv; renderPlanDoc(); });
+    });
+  }
+  /* The morning: a preview whose day has arrived becomes the plan, with
+     no bridge needed. Returns true when it did. */
+  function promoteNext(){
+    if(!nextPlan||!nextPlan.date) return false;
+    if(String(nextPlan.date).slice(0,10) > ymdLocalNow_()) return false;
+    var p=nextPlan; nextPlan=null;
+    /* runs before the boot render, so no re-render here: just swap the
+       plan in if it is newer than what the phone holds */
+    if(!plan || (plan.rev||0) < (p.rev||0)) plan=p;
+    savePlan();
+    return true;
   }
 
   /* ── the day code ──────────────────────────────────────────────
@@ -2097,10 +2155,26 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       .then(function(r){ return r.json(); })
       .then(function(d){
         if(!d.ok){ syncMsg('Bridge error: '+(d.error||'unknown'),true); return; }
-        if(!d.plan){ if(manual) syncMsg('No plan waiting at the bridge.'); return; }
+        /* Tomorrow's plan, if the bridge has one, is held for preview. */
+        var gotNext=false;
+        if(d.next && d.next.ids && d.next.date && String(d.next.date).slice(0,10) > ymdLocalNow_()){
+          if(!nextPlan || (nextPlan.rev||0) < (d.next.rev||0) || nextPlan.date!==d.next.date){
+            nextPlan=d.next; planView='next'; savePlan(); renderPlanDoc(); gotNext=true;
+          }
+        } else if(nextPlan && d.plan && d.plan.date===nextPlan.date){
+          nextPlan=null; savePlan();      /* it became today's; the bridge now serves it as plan */
+        }
+        if(!d.plan){
+          if(gotNext) syncMsg('Tomorrow\'s plan is in: '+d.next.ids.length+' calls. Preview it on the Plan tab.');
+          else if(manual) syncMsg('No plan waiting at the bridge.');
+          return;
+        }
         if(adoptPlan(d.plan)){
           syncMsg('Plan for '+(d.plan.date||'today')+' loaded: '+d.plan.ids.length+' calls.');
           document.getElementById('daymsg').textContent='Synced: '+d.plan.ids.length+' calls'+(d.plan.date?' for '+d.plan.date:'')+'.';
+          setTab('plan');
+        } else if(gotNext){
+          syncMsg('Tomorrow\'s plan is in: '+d.next.ids.length+' calls. Preview it on the Plan tab.');
           setTab('plan');
         } else if(manual){
           syncMsg('Already up to date'+((plan&&plan.date)?' ('+plan.date+')':'')+'.');
@@ -2528,6 +2602,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 
   /* boot */
   var archived=archiveDay();
+  var promoted=promoteNext();
   applyPlan(); renderPlanDoc(); applySecs(); cards.forEach(paint); counts(); syncState();
   if(!storageOK) banner(storageNote);
   else if(archived) banner('Yesterday’s '+archived+' logged contact'+(archived===1?'':'s')+' moved into history. Cards are clean.',true);
