@@ -2656,9 +2656,17 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function get(cfg, fn, extra) {
     var url = cfg.url + '?k=' + encodeURIComponent(cfg.key) + '&fn=' + fn + (extra || '');
     /* A hung cellular request used to leave "Loading your pipeline…" on the
-       screen forever. Twelve seconds, then the cache. */
+       screen forever. Twelve seconds, then the cache — except the roster.
+       The roster is the bridge's heavy call: before it answers it mirrors
+       the phone's dates and notes into the pipeline, folds the ABR roster
+       in, and refreshes Claude's snapshot when it is stale. A first open
+       after a big pipeline change ran past 12s on Sep 2 and the phone hung
+       up on a request that was still working ("Fetch is aborted"). Sixty
+       seconds for that one call; the bridge itself gives up at 25s if it
+       cannot get the lock, so the phone always hears something. */
+    var ms = fn === 'roster' ? 60000 : 12000;
     var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
-    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 12000) : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms) : null;
     return fetch(url, { method: 'GET', redirect: 'follow', signal: ctl ? ctl.signal : undefined })
       .then(function (r) { if (timer) clearTimeout(timer); return r.json(); })
       .catch(function (e) { if (timer) clearTimeout(timer); throw e; });
