@@ -350,6 +350,7 @@ footer .m{font-size:12px;color:var(--ink-3)}
 <h1>The Call <span>Deck</span></h1>
 <p id="gatemsg">Loading your pipeline…</p>
 <p class="err" id="gatesub"></p>
+<button id="gateout" type="button" hidden>Open Sync settings</button>
 </div>
 </div>
 
@@ -401,7 +402,7 @@ footer .m{font-size:12px;color:var(--ink-3)}
 <p class="m">One-time per device: paste the Deck Bridge /exec URL and bridge key. The deck then loads your pipeline straight from the Command Center, every status and note writes back within a second, and End my day files the Activity row. Nothing lives only on this phone.</p>
 <input id="syncurl" type="url" placeholder="https://script.google.com/macros/s/&hellip;/exec" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Bridge URL">
 <input id="synckey" type="password" placeholder="bridge key" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Bridge key">
-<div class="dayrow"><button class="daybtn primary" id="syncsave">Save</button><button class="daybtn" id="syncnow">Sync now</button><span id="syncmsg"></span></div>
+<div class="dayrow"><button class="daybtn primary" id="syncsave">Save</button><button class="daybtn" id="syncnow">Sync now</button><button class="daybtn" id="refresh">Refresh deck</button><span id="syncmsg"></span></div>
 <div class="synced" id="syncstate"></div>
 <div class="dayrow"><button class="daybtn" id="restorebtn">Restore today from sheet</button><button class="daybtn" id="storagebtn">Storage check</button></div>
 <pre class="diag" id="diag" hidden></pre>
@@ -452,13 +453,13 @@ html,body{overflow-x:hidden;max-width:100%}
 .geochips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;min-width:0}
 .geochips::-webkit-scrollbar{display:none}
 .gc{flex:0 0 auto;padding:7px 12px;border:1.5px solid var(--line-strong);border-radius:999px;
-  background:var(--ground);color:var(--ink-2);font:600 11.5px/1 var(--sans);letter-spacing:.02em;
+  background:var(--ground);color:var(--ink-2);font:600 11.5px/1 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;letter-spacing:.02em;
   white-space:nowrap;cursor:pointer}
 .gc[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 .gcelse{border-style:dashed}
 .geocity{margin-top:10px}
 .geocity input{width:100%;padding:11px 12px;border:1.5px solid var(--line-strong);border-radius:10px;
-  background:var(--ground);color:var(--ink);font:500 15px/1.2 var(--sans);margin-bottom:8px}
+  background:var(--ground);color:var(--ink);font:500 15px/1.2 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin-bottom:8px}
 .geonote{margin:6px 0 0;font-size:11.5px;color:var(--ink-3)}
 
 /* The gate is position:fixed with display:flex, so plain [hidden] loses the
@@ -466,9 +467,9 @@ html,body{overflow-x:hidden;max-width:100%}
 #gate[hidden]{display:none!important}
 .linemark{display:flex;align-items:baseline;gap:10px;margin:18px 2px 14px;padding:0 2px;
   border-top:1.5px dashed var(--line-strong)}
-.linemark span{margin-top:-9px;background:var(--bg);padding:0 8px 0 0;font-size:11px;font-weight:700;
+.linemark span{margin-top:-9px;background:var(--ground);padding:0 8px 0 0;font-size:11px;font-weight:700;
   letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
-.linemark em{margin-top:-9px;background:var(--bg);padding:0 8px;font-style:normal;font-size:11px;color:var(--ink-3)}
+.linemark em{margin-top:-9px;background:var(--ground);padding:0 8px;font-style:normal;font-size:11px;color:var(--ink-3)}
 .tabnote{margin:0 14px 8px;font-size:11.5px;line-height:1.5;color:var(--ink-3)}
 .gapnote{font-size:12px}
 .tabnote .warn{color:#8f2f2f}
@@ -825,7 +826,7 @@ window.__initDeck=function(){
      and the next tap saved that empty object over the day. Never again:
      a read that fails is remembered as FAILED, not as empty, and a failed
      read freezes writing until the day is either recovered or released. */
-  var storageOK=true, storageNote='', lastCount=0;
+  var storageOK=true, writeFailed=false, storageNote='', lastCount=0;
 
   function readKey(k){
     var raw;
@@ -866,6 +867,19 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     for(var i=0;i<RANK.length;i++){ if(st.m[RANK[i]]) return RANK[i]; }
     return '';
   }
+  /* Handled TODAY. A status from a day that was never sent to the Command
+     Center stays in `m` (so it still reaches the next report), which meant
+     an LM from Aug 30 hid Staci under Hide handled on Sep 2 and re-pushed
+     itself into Sep 2's row. Anything older than this morning is history,
+     not today's disposition. */
+  function bestToday(st){
+    if(!st || !st.t || st.t<midnight()) return '';
+    return best(st);
+  }
+  function todaysM(st){
+    if(!st || !st.m || !st.t || st.t<midnight()) return null;
+    return st.m;
+  }
   /* Writing is a privilege, not a right. Three locks:
        1. a failed read freezes all writes
        2. an empty state never overwrites a non-empty one
@@ -882,7 +896,12 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       lastCount=n; snapshot();
       return true;
     }catch(e){
-      storageOK=false;
+      /* A failed write is not a failed read. The read-failure freeze exists
+         so a damaged store is never overwritten; a quota error on write is
+         a different thing, and freezing pushes on it made the banner a lie:
+         "your taps are still going to the Command Center" while push()
+         returned early on the same flag. Keep pushing. */
+      writeFailed=true;
       banner('This phone stopped accepting saves. Your taps are still going to the Command Center.');
       return false;
     }
@@ -903,6 +922,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     try{ if(plan){ localStorage.setItem(TKEY,JSON.stringify(plan)); } else { localStorage.removeItem(TKEY); } }catch(e){}
   }
   function midnight(){ var n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(); }
+  function ymdLocalNow_(){ var d=new Date(); return d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()); }
   function two(n){ return (n<10?'0':'')+n; }
   function todayStamp(d){ d=d||new Date(); return two(d.getMonth()+1)+'/'+two(d.getDate())+'/'+d.getFullYear(); }
 
@@ -983,6 +1003,14 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var GEO_KEY = 'cc-deck-geo';
   var GEOSET = null;
   var rg = readKey(GEO_KEY); if (rg.ok && rg.val) GEOSET = rg.val;
+  /* The chip is a fact about ONE day. "On the way to the Peninsula" on
+     Tuesday must not filter Wednesday's Today. Forget it at day change. */
+  (function(){
+    var today=ymdLocalNow_();
+    var was=''; try{ was=localStorage.getItem('cc-deck-geo-day')||''; }catch(e){}
+    if(was && was!==today && GEOSET){ GEOSET=null; try{ localStorage.removeItem(GEO_KEY); }catch(e){} }
+    try{ localStorage.setItem('cc-deck-geo-day', today); }catch(e){}
+  })();
 
   var CHIPS = [
     ['', 'Anywhere'],
@@ -1120,7 +1148,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function evalTab(id) {
     var tab = TABBY[id] || {}, q = tab.q || {};
     var day = (plan && plan.q) ? plan.q : (plan || {});
-    var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    /* Noon, not midnight. dueDays() compares against a follow-up date set
+       at NOON (fu + 'T12:00:00'); measuring from midnight put every window
+       off by one — a contact due today read as 1, due yesterday as 0, and
+       the Today tab's "due <= 0" test excluded everyone actually due today.
+       That is why Staci Sytkowski vanished on Sep 1 and why an 8:30
+       appointment would not have surfaced on its own morning. */
+    var t0 = new Date(); t0.setHours(12, 0, 0, 0);
     var now = t0.getTime();
     /* A tab can name its own destination — that is how a pasted day code
        pins a route. Otherwise the chip row decides. */
@@ -1128,8 +1162,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
             : (q.corridor && q.corridor.length) ? makeGeo('route', q.corridor[0])
             : (day.corridor && day.corridor.length && q.dayGeo !== false) ? makeGeo('route', day.corridor[0])
             : geoFilter();
+    /* A plan is for the day stamped on it. One without a date is not for
+       today — treating it as "today forever" is how Tuesday's pins headed
+       every tab on Wednesday. */
+    var planDate = String(plan && plan.date || day.date || '').slice(0, 10);
+    var planIsForToday = !!(day.ids && day.ids.length && planDate && planDate === ymdLocal(t0));
     var pins = {};
-    if (q.pinned !== false && day.ids) day.ids.forEach(function (x, i) { pins[x] = day.ids.length - i; });
+    if (q.pinned !== false && planIsForToday) day.ids.forEach(function (x, i) { pins[x] = day.ids.length - i; });
 
     /* Today is a closed list, not a backlog.
        A list you cannot finish is not a plan, and seeing 146 overdue every
@@ -1142,13 +1181,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
        When there is no plan for today the tab must not be empty either, so
        it falls back to the same ranking, capped, and says which mode it is
        in. Never infinite, never blank, never lying about which it is. */
-    var planIsForToday = false;
-    if (q.planOnly && day.ids && day.ids.length) {
-      var pd = String(plan && plan.date || day.date || '').slice(0, 10);
-      planIsForToday = !pd || pd === ymdLocal(t0);
-    }
     var planSet = null;
-    if (planIsForToday) { planSet = {}; day.ids.forEach(function (x) { planSet[x] = 1; }); }
+    if (q.planOnly && planIsForToday) { planSet = {}; day.ids.forEach(function (x) { planSet[x] = 1; }); }
 
     var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0;
     DATA.contacts.forEach(function (c) {
@@ -1161,6 +1195,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 
       var due = dueDays(c.fu, now);
       var overdue = due !== null && due < 0;
+
+      /* Today IS the plan. The plan already decided who is on it — including
+         people pulled forward before their date, which is the whole point of
+         the "Not due until … pulled forward on purpose" chip. Running the due
+         and geography filters over the plan's own list dropped most of it. */
+      if (planSet) {
+        out.push({ id: c.id, c: c, due: due, detour: 0, hot: false, must: true, pin: pins[c.id] || 0 });
+        return;
+      }
       if (q.due === 'overdue' && !overdue) return;
       if (q.due === 'today'   && !(due !== null && due <= 0)) return;
       if (q.due === 'week'    && !(due !== null && due <= 7)) return;
@@ -1201,8 +1244,14 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
            call or running hot is exempt, because the passive default should
            not quietly drop someone he said he would ring. */
         var fromHome = GEO.between('Aptos', c.city);
-        if (!must && fromHome > GEO.homeMiles(c.init || 0, null, c.k)) { tooFar++; return; }
-        away = fromHome;
+        /* A town the map does not know is not "too far", it is unknown.
+           Los Banos, Dos Palos and San Juan Bautista — 30 miles away — were
+           being dropped from Residential as if they were out of state. */
+        if (!isFinite(fromHome)) { noCity++; away = 0; }
+        else {
+          if (!must && fromHome > GEO.homeMiles(c.init || 0, null, c.k)) { tooFar++; return; }
+          away = fromHome;
+        }
       }
       if (q.cities && q.cities.length && q.cities.map(lc).indexOf(lc(c.city)) < 0) return;
 
@@ -1265,8 +1314,29 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     });
 
     /* The cap is the fallback's safety net, not the plan's. When Today IS
-       the plan, the plan already decided how many calls fit the day. */
-    if (q.cap && !planIsForToday && out.length > q.cap) out = out.slice(0, q.cap);
+       the plan, the plan already decided how many calls fit the day.
+
+       A fixed number was always going to be wrong. Carlo blocked five hours
+       of calling on Sep 2 and the tab handed him fifteen names — a closed
+       list is only useful if it is closed at the size of his actual day.
+       cap:'day' resolves to the call target the bridge computes from his
+       own plan (dollars ÷ his conversion assumptions), so a heavy week
+       loads a longer list and a booth week loads a shorter one without
+       anybody editing a number. */
+    var capN = q.cap;
+    if (capN === 'day' || capN === 'week') {
+      var ct = (DATA.targets && DATA.targets.ok) ? DATA.targets[capN] : null;
+      capN = ct ? ((ct.b || 0) + (ct.r || 0)) : 0;
+      /* The floor is not decoration. The plan's call target is derived from
+         the week's DOLLARS by channel, and an events week books all of its
+         money at a booth — week 36 is $8,000 of Millbrae and nothing else,
+         so the derived target is close to zero. Left alone, the tab would
+         hand Carlo the shortest list in the weeks he has the most phone
+         time. A day of calling is a day of calling whatever the plan says
+         the booth will earn. Floor at a full day, ceil at what fits. */
+      capN = Math.max(25, Math.min(capN + 5, 40));
+    }
+    if (capN && !planIsForToday && out.length > capN) out = out.slice(0, capN);
 
     /* The target is a LINE, not a cutoff, and it comes from Carlo's own
        plan — dollars and his conversion assumptions, computed by the
@@ -1298,11 +1368,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var byId={}; cards.forEach(function(c){ byId[c.dataset.id]=c; });
 
   function paint(c){
-    var id=c.dataset.id, st=(state[id]||{});
-    c.dataset.s=best(st);
-    c.dataset.bad=(st.m&&st.m.bad)?'1':'';
+    var id=c.dataset.id, st=(state[id]||{}), m=todaysM(st)||{};
+    c.dataset.s=bestToday(st);
+    c.dataset.bad=(m.bad || (st.h||[]).some(function(h){ return /BAD/.test(h.m||''); }))?'1':'';
     [].forEach.call(c.querySelectorAll('.sb'),function(b){
-      b.setAttribute('aria-pressed', (st.m && st.m[b.dataset.v]) ? 'true':'false');
+      b.setAttribute('aria-pressed', m[b.dataset.v] ? 'true':'false');
     });
     [].forEach.call(c.querySelectorAll('.fi'),function(f){
       var v=st[f.dataset.f]||'';
@@ -1366,7 +1436,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
   function areaOf(c){
     var city=cityOf(c);
-    return (city && CITY2AREA[city.toLowerCase()]) || c.dataset.area || '';
+    /* One region table, the geo module's. The shell used to keep its own
+       copy and the two disagreed on Castro Valley and Milpitas. */
+    return (city && GEO && GEO.region && GEO.region(city)) || (city && CITY2AREA[city.toLowerCase()]) || c.dataset.area || '';
   }
   function paintNear(c,st){
     var host=c.querySelector('[data-near]'); if(!host) return;
@@ -1400,9 +1472,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      when to stop trying and move someone to a drip. */
   function paintTally(c,st){
     var el=c.querySelector('[data-tally]'); if(!el) return;
-    var n=Number(st.calls||0)||0, ever=(st.h||[]).some(function(h){ return /connected|booked|done|order/.test(h.m||''); });
-    var reached=(st.m&&(st.m.connected||st.m.booked||st.m.done||st.m.order))||ever;
-    if(st.m&&st.m.bad){
+    var n=Number(st.calls||0)||0, ever=(st.h||[]).some(function(h){ return /CONNECTED|BOOKED|DONE|ORDER/.test(h.m||''); });
+    var m=todaysM(st)||{};
+    var reached=(m.connected||m.booked||m.done||m.order)||ever;
+    var badEver=(st.h||[]).some(function(h){ return /BAD/.test(h.m||''); });
+    if(m.bad || badEver){
       el.hidden=false; el.className='dialtally bad';
       el.textContent='Bad number. Fix the pipeline row, or reach out by email.';
       return;
@@ -1420,8 +1494,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var el=c.querySelector('[data-live]'); if(!el) return;
     var h=(st.h||[]).slice(-6).reverse();
     var live=[];
-    if(st.m||st.n||st.x||st.a){
-      var labs=RANK.filter(function(v){ return st.m&&st.m[v]; }).map(function(v){ return v.toUpperCase(); });
+    var tm=todaysM(st);
+    if(tm||((st.n||st.x||st.a) && st.t && st.t>=midnight())){
+      var labs=RANK.filter(function(v){ return tm&&tm[v]; }).map(function(v){ return v.toUpperCase(); });
       live.push({d:'today', m:labs.join('+'), n:st.n, x:st.x, a:st.a});
     }
     var rows=live.concat(h);
@@ -1512,7 +1587,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       p.hidden = p.dataset.nocard ? (p.dataset.p!==sel) : (searching ? false : (p.dataset.p!==sel));
     });
     cards.forEach(function(c){
-      var handled=best(state[c.dataset.id]);
+      var handled=bestToday(state[c.dataset.id]);
       /* v6: one pool, so membership is a flag the query sets, not the panel
          a card happens to live in. */
       var inScope = searching || c.dataset.in==='1';
@@ -1600,7 +1675,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         m[v]=1;
         if(DIALS[v]) state[id].calls=(Number(state[id].calls||0)||0)+1;
       }
-      state[id].t = Date.now();
+      state[id].t = Date.now(); delete state[id].exp;
       /* The note belongs to the same moment as the tap, so Results opens
          itself the instant a status is set. Zero extra taps. */
       var res=c.querySelector('details.sec[data-sec="results"]');
@@ -1624,8 +1699,14 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var iso=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
       var id=c.dataset.id; state[id]=state[id]||{};
       var off=(state[id].d===iso);
+      /* Deck State keeps one row per contact per day, so a blank cell there
+         means "nothing said today", not "cleared" — the bridge cannot tell
+         a retraction from a quiet day unless the retraction is spoken. Say
+         it. dclr rides along to the sheet as (cleared); the local date
+         stays empty so the field and the chips paint correctly. */
       state[id].d = off ? '' : iso;
-      state[id].t = Date.now();
+      state[id].dclr = off ? 1 : 0;
+      state[id].t = Date.now(); delete state[id].exp;
       var f=c.querySelector('.wdate'); if(f) f.value=state[id].d;
       save(); push(id); paintWhen(c,state[id]);
     });
@@ -1635,7 +1716,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     [].forEach.call(c.querySelectorAll('.fi'),function(f){
       f.addEventListener('input',function(){
         var id=c.dataset.id; state[id]=state[id]||{};
-        state[id][f.dataset.f]=f.value; state[id].t=Date.now();
+        state[id][f.dataset.f]=f.value; state[id].t=Date.now(); delete state[id].exp;
+        /* Emptying a field by hand is a retraction too, and it has to reach
+           the sheet as one for the same reason the chip does. */
+        if(f.dataset.f==='d') state[id].dclr = f.value ? 0 : 1;
+        if(f.dataset.f==='a') state[id].aclr = f.value ? 0 : 1;
         clearTimeout(timers[f.dataset.f]);
         var isCity=f.dataset.f==='c';
         if(f.dataset.f==='d') paintFu(c,state[id]);
@@ -1782,8 +1867,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var rsy=readKey(SKEY); if(rsy.ok) SYNC=rsy.val||null;
 
   /* The settings ride in the home screen link, so an iOS storage eviction
-     cannot orphan the deck from its own bridge. Hash wins over storage. */
+     cannot orphan the deck from its own bridge. Storage wins over the hash
+     when it has something: otherwise a rotated key is undone every launch
+     by the link that carried the old one. */
   (function(){
+    if(SYNC && SYNC.url && SYNC.key) return;
     var h=(location.hash||'').match(/[#&]s=([A-Za-z0-9+/=_-]+)/);
     if(!h) return;
     try{
@@ -1803,6 +1891,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var el=document.getElementById('syncstate'); if(!el) return;
     if(!SYNC){ el.textContent='Not connected. The deck is saving to this phone only.'; el.className='synced off'; return; }
     var q=queue.length;
+    if(q && lastSyncErr && lastSyncErr!=='offline'){
+      el.textContent=q+' change'+(q===1?'':'s')+' NOT sent: '+lastSyncErr;
+      el.className='synced off'; return;
+    }
     el.textContent = q ? (q+' change'+(q===1?'':'s')+' waiting for signal.')
                        : 'Connected. Every tap is written to the Command Center.';
     el.className='synced'+(q?' pending':' on');
@@ -1819,6 +1911,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       syncMsg('Saved. Syncing…'); syncState(); fetchPlan(true); flush(true);
     });
     document.getElementById('syncnow').addEventListener('click',function(){ fetchPlan(true); flush(true); });
+    /* Refresh: send anything unsent, then reload from the bridge. This is
+       the button that replaces the pull-to-refresh a home-screen app does
+       not have. */
+    var rb=document.getElementById('refresh');
+    if(rb) rb.addEventListener('click',function(){
+      rb.disabled=true; rb.textContent='Refreshing…';
+      flush(true);
+      setTimeout(function(){ if(window.__reloadDeck) window.__reloadDeck(); else location.reload(); }, queue.length?1500:200);
+    });
 
     /* Restore: pull today back down from the sheet. This is the button that
        makes an iOS wipe survivable. */
@@ -1838,8 +1939,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
             /* the sheet only wins where this phone has nothing newer */
             if((cur.t||0) >= (it.t||0)){ seen++; return; }
             var m={}; (it.m||[]).forEach(function(v){ m[v]=1; });
-            state[it.id]={m:m, n:it.n||'', x:it.x||'', a:it.a||'',
-                          c:it.city||'', d:it.due||'',
+            var a=it.a||'', due=it.due||'';
+            var aclr=(a==='(cleared)')?1:0, dclr=(due==='(cleared)')?1:0;
+            if(aclr) a=''; if(dclr) due='';
+            state[it.id]={m:m, n:it.n||'', x:it.x||'', a:a, aclr:aclr,
+                          c:it.city||'', d:due, dclr:dclr,
                           calls:it.calls||0, t:it.t||Date.now(), h:cur.h||[]};
             n++;
           });
@@ -1917,44 +2021,71 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       id:id,
       name: c ? c.querySelector('.nm').textContent : '',
       company: c ? c.querySelector('.co').textContent : '',
-      m: RANK.filter(function(v){ return st.m && st.m[v]; }),
-      n: st.n||'', x: st.x||'', a: st.a||'',
-      city: st.c||'', due: st.d||'',
+      m: RANK.filter(function(v){ var tm=todaysM(st); return tm && tm[v]; }),
+      n: st.n||'', x: st.x||'', a: st.a || (st.aclr ? '(cleared)' : ''),
+      city: st.c||'', due: st.d || (st.dclr ? '(cleared)' : ''),
       calls: Number(st.calls||0)||0,
       t: st.t||Date.now()
     };
   }
+  var lastSyncErr='';
+  function dayOf(t){ var d=new Date(t); return two(d.getMonth()+1)+'/'+two(d.getDate())+'/'+d.getFullYear(); }
   function flush(manual){
     if(!SYNC||!SYNC.url){ if(manual) syncMsg('Save the bridge URL and key first.',true); return; }
     if(flushing || !queue.length){ syncState(); return; }
     flushing=true;
-    var batch=queue.slice(0,40);
-    fetch(SYNC.url,{method:'POST',body:JSON.stringify({
-      k:SYNC.key, fn:'touch', date:todayStamp(), items:batch.map(itemFor)
-    })})
-      .then(function(r){ return r.json(); })
-      .then(function(d){
+    /* Remember the timestamp each item carried when it left. A tap that
+       lands while the request is in flight advances state[id].t; on
+       success only ids whose t has NOT moved are cleared from the queue.
+       Before this, a date chip tapped during a 2-second POST was dropped
+       on the floor — the id was already "in the batch", so push() did
+       nothing, and the batch's success removed it. */
+    var batch=queue.slice(0,40), sent={};
+    batch.forEach(function(id){ sent[id]=(state[id]&&state[id].t)||0; });
+    /* Group by the day the tap happened, not the day it is being sent.
+       An evening of offline taps flushed the next morning used to land
+       in the wrong day's rows. */
+    var groups={};
+    batch.forEach(function(id){ var d=dayOf(sent[id]||Date.now()); (groups[d]=groups[d]||[]).push(id); });
+    var days=Object.keys(groups);
+    var okAll=true, err='';
+    (function next(i){
+      if(i>=days.length){
         flushing=false;
-        if(d && d.ok){
-          queue=queue.filter(function(x){ return batch.indexOf(x)<0; });
+        if(okAll){
+          queue=queue.filter(function(x){ return !(x in sent) || ((state[x]&&state[x].t)||0)>sent[x]; });
+          lastSyncErr='';
           saveQueue(); syncState();
           if(queue.length) flush(false);
         } else {
-          syncState();
-          if(manual) banner('Bridge error: '+((d&&d.error)||'unknown'));
+          lastSyncErr=err; syncState();
+          if(manual) banner('Bridge error: '+err);
         }
-      })
-      .catch(function(){
-        flushing=false; syncState();
-        if(manual) banner('Offline. '+queue.length+' change'+(queue.length===1?'':'s')+' will send when signal returns.');
-      });
+        return;
+      }
+      var d=days[i];
+      fetch(SYNC.url,{method:'POST',body:JSON.stringify({
+        k:SYNC.key, fn:'touch', date:d, items:groups[d].map(itemFor)
+      })})
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          if(!(res && res.ok)){ okAll=false; err=(res&&res.error)||'unknown'; }
+          next(i+1);
+        })
+        .catch(function(e){
+          okAll=false; err=(/JSON/.test(String(e))?'the bridge answered with a login page; the URL or deployment may have changed':'offline');
+          next(i+1);
+        });
+    })(0);
   }
-  window.addEventListener('online',function(){ flush(false); });
-  document.addEventListener('visibilitychange',function(){ if(!document.hidden) flush(false); });
-  setInterval(function(){ if(queue.length) flush(false); },45000);
   function adoptPlan(p){
     if(!p||!p.ids||!p.ids.length) return false;
     if(plan && (plan.rev||0)>=(p.rev||0)) return false;
+    /* A plan whose ids match nobody on this deck is a plan for a different
+       roster; adopting it would empty Today with no explanation. */
+    var known=p.ids.filter(function(id){ return !!byId[id]; });
+    if(!known.length){ banner('The plan at the bridge names contacts this deck does not have. Refresh the deck, then Sync now.'); return false; }
+    if(!p.date){ banner('The plan at the bridge has no date on it and was not loaded.'); return false; }
     restorePlan();
     plan=p; savePlan(); applyPlan(); renderPlanDoc(); filter();
     return true;
@@ -2232,6 +2363,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var noteLine='Call Deck day. '+called+' outreach: '+dials+' dials, '+txn+' texts, '+conn+' connects.';
     out+='\nACTIVITY ROW (fallback if not using Send to Command Center) — columns: Date, Calls, Texts, Connects, Emails, Appts Booked, Appts Done, Orders, CPO, Notes\n';
     out+=ds+'\t'+dials+'\t'+txn+'\t'+conn+'\t'+em+'\t'+book+'\t'+ad+'\t'+orq+'\t'+cpo+'\t'+noteLine+'\n';
+    /* The last line of the report, and it is load-bearing. A mailto: URL can
+       be truncated by the mail app with no error and no visible seam — which
+       is exactly how a day of dispositions disappears without anybody
+       noticing. There is no length at which that stops being possible, so
+       guessing a safe ceiling is the wrong move; the right move is to make
+       the cut VISIBLE. A report that does not end with this line was cut,
+       and both Carlo and whoever reads it can tell at a glance. Same reason
+       the Drive snapshot ends with its own END marker. */
+    out+='\n=== END OF LOG · '+touched.length+' contacts · '+ds+' ===\n';
     lastLog={date:ds,calls:dials,texts:txn,connects:conn,emails:em,apptsBooked:book,apptsDone:ad,
       orders:orq,cpo:cpo,notes:noteLine,report:out};
     return out;
@@ -2241,32 +2381,46 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var now=new Date();
     return 'Claude: Call Deck log '+now.getFullYear()+'-'+two(now.getMonth()+1)+'-'+two(now.getDate());
   }
+  var LOG_TO='cutcocarloai@gmail.com';
+  /* No length threshold. There used to be one — 5,000 characters, then
+     12,000 — and both were the same mistake: a number picked to guess where
+     the mail app might truncate, which meant a long day silently took a
+     different, worse path. Sep 1's report was 7,067 characters, crossed the
+     line, and lost its recipient and subject.
+
+     The report is now always sent whole AND always copied to the clipboard
+     first, and it always ends with an END OF LOG line. So there is nothing
+     to tune: if the mail app carries it, it arrives complete; if the mail
+     app cuts it, the missing END line says so and the whole thing is
+     already on the clipboard, one paste away. Nothing is lost at any
+     length, and no number in this file decides that. */
   function renderReport(){
     var txt=buildReport();
     document.getElementById('logout').value=txt;
     var a=document.getElementById('maillog');
-    /* v3.3: adaptive, zero truncation. Normal days ride the mailto link whole;
-       oversized reports route to the share sheet, which has no length limit. */
-    if(txt.length<=5000){
-      a.setAttribute('href','mailto:cutcocarloai@gmail.com?subject='+encodeURIComponent(logSubject())+'&body='+encodeURIComponent(txt));
-      a.dataset.share='0';
-    } else {
-      a.setAttribute('href','#');
-      a.dataset.share='1';
-    }
+    a.setAttribute('href','mailto:'+LOG_TO+'?subject='+encodeURIComponent(logSubject())+
+      '&body='+encodeURIComponent(txt));
     return txt;
   }
+  function copyReport(txt){
+    try{
+      var o=document.getElementById('logout');
+      o.removeAttribute('readonly'); o.focus(); o.select();
+      o.setSelectionRange(0,txt.length);
+      var okc=document.execCommand('copy');
+      o.setAttribute('readonly','readonly');
+      if(okc) return true;
+    }catch(e){}
+    if(navigator.clipboard){ navigator.clipboard.writeText(txt).catch(function(){}); return true; }
+    return false;
+  }
   document.getElementById('maillog').addEventListener('click',function(e){
-    if(this.dataset.share==='1'){
-      e.preventDefault();
-      var txt=renderReport();
-      if(navigator.share){
-        navigator.share({title:logSubject(),text:'To: cutcocarloai@gmail.com\n\n'+txt}).catch(function(){});
-      } else {
-        var o=document.getElementById('logout'); o.focus(); o.select();
-        alert('Report is too large for an email link. It is selected below — copy and paste it into an email to cutcocarloai@gmail.com.');
-      }
-    }
+    /* Always rebuild first. The href is only ever correct for the report as
+       it stood the last time something rendered it, and this button is
+       reachable without pressing End my Day. A stale href is how a working
+       link quietly becomes a broken one. */
+    var txt=renderReport();
+    copyReport(txt);      /* belt and braces, every time, whatever the size */
     markExport();
   });
   document.getElementById('mklog').addEventListener('click',function(){
@@ -2314,7 +2468,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   document.getElementById('sharelog').addEventListener('click',function(){
     var txt=renderReport();
     if(navigator.share){
-      navigator.share({title:logSubject(),text:'To: cutcocarloai@gmail.com\n\n'+txt}).catch(function(){});
+      navigator.share({title:logSubject(),text:'To: '+LOG_TO+'\n\n'+txt}).catch(function(){});
       markExport();
     }
     else { document.getElementById('maillog').click(); }
@@ -2347,10 +2501,30 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return moved;
   }
   function markDayExported(){
+    /* Same window the report used, so every entry that was reported is
+       stamped. Stamping only since midnight left yesterday-after-export
+       entries reported once, never stamped, never archived: lit forever. */
     var mid=midnight();
+    var exp=0; try{ exp=Number(localStorage.getItem('cc-deck-export')||0)||0; }catch(e){}
+    if(exp>0 && exp<Date.now()) mid=Math.min(exp,mid);
     for(var id in state){ if(state[id] && state[id].t>=mid) state[id].exp=Date.now(); }
     save();
   }
+
+  /* Once the pipeline carries what the phone set, the phone lets go of it.
+     Otherwise st.d shadows a newer date typed in the sheet forever, and a
+     stale next step re-enters every report the card is touched in. */
+  (function(){
+    var changed=false;
+    DATA.contacts.forEach(function(c){
+      var st=state[c.id]; if(!st) return;
+      if(st.d && c.fu===st.d){ delete st.d; delete st.dclr; changed=true; }
+      if(!st.d && st.dclr && !c.fu){ delete st.dclr; changed=true; }
+      if(st.a && c.act && c.act===st.a){ delete st.a; delete st.aclr; changed=true; }
+      if(!st.a && st.aclr && !c.act){ delete st.aclr; changed=true; }
+    });
+    if(changed) save();
+  })();
 
   /* boot */
   var archived=archiveDay();
@@ -2360,9 +2534,27 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   buildGeoBar();
   countTabs();
   setTab(TABS[0] ? TABS[0].id : 'today');
-  if(DATA.stale) banner('Showing the copy saved on this phone — '+(DATA.why||'the bridge did not answer')+'. Pull to refresh when you have signal.');
+  if(DATA.stale) banner('Showing the copy saved on this phone — '+(DATA.why||'the bridge did not answer')+'. Tap Refresh deck in Sync settings when you have signal.');
   else if(DATA.notes && DATA.notes.length) banner(DATA.notes.join(' · '));
   else if(DATA.gaps && DATA.gaps.length) banner(DATA.gaps.length+' contacts have no call outline written yet. Ask for them in the Command Center project.',true);
+  /* built time in the footer, so "is this today's roster" has an answer */
+  (function(){ var bl=document.getElementById('buildline'); if(bl && DATA.built){ var b=new Date(DATA.built); bl.textContent='v6.1 · roster '+(isNaN(b)?DATA.built:b.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})); } })();
+  /* A deck left open across midnight — the common case for a phone that is
+     never closed — must roll the day over when it comes back into view:
+     archive what was sent, forget the geo chip, repaint. */
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState!=='visible') return;
+    var today=ymdLocalNow_(), was='';
+    try{ was=localStorage.getItem('cc-deck-seen-day')||''; }catch(e){}
+    if(was===today) return;
+    try{ localStorage.setItem('cc-deck-seen-day', today); }catch(e){}
+    if(!was) return;
+    var n=archiveDay();
+    GEOSET=null; try{ localStorage.removeItem(GEO_KEY); }catch(e){}
+    buildGeoBar(); cards.forEach(paint); counts(); countTabs(); applyQuery(selTab()); filter();
+    banner('New day. '+(n?n+' logged contact'+(n===1?'':'s')+' moved into history. ':'')+'Tap Refresh deck for today\'s roster.',true);
+  });
+  try{ localStorage.setItem('cc-deck-seen-day', ymdLocalNow_()); }catch(e){}
   fetchPlan(false);
   if(queue.length) flush(false);
 };
@@ -2388,11 +2580,24 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
   }
-  function gate(msg, sub) {
+  function gate(msg, sub, out) {
     var g = $('gate'); if (!g) return;
     g.hidden = false;
     $('gatemsg').textContent = msg || '';
     $('gatesub').innerHTML = sub || '';
+    /* A gate with no way out is a dead end. The message used to say "open
+       Sync settings at the bottom of the Today tab" — which was underneath
+       the gate. When the deck cannot load, the gate offers the door. */
+    var b = $('gateout');
+    if (b) {
+      b.hidden = !out;
+      b.onclick = function () {
+        g.hidden = true;
+        var box = document.getElementById('syncbox');
+        if (box) { box.open = true; box.scrollIntoView(); }
+        var u = document.getElementById('syncurl'); if (u) u.focus();
+      };
+    }
   }
   function ungate() { var g = $('gate'); if (g) g.hidden = true; }
 
@@ -2450,8 +2655,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   /* ── fetch ───────────────────────────────────────────────────── */
   function get(cfg, fn, extra) {
     var url = cfg.url + '?k=' + encodeURIComponent(cfg.key) + '&fn=' + fn + (extra || '');
-    return fetch(url, { method: 'GET', redirect: 'follow' })
-      .then(function (r) { return r.json(); });
+    /* A hung cellular request used to leave "Loading your pipeline…" on the
+       screen forever. Twelve seconds, then the cache. */
+    var ctl = (typeof AbortController === 'function') ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 12000) : null;
+    return fetch(url, { method: 'GET', redirect: 'follow', signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { if (timer) clearTimeout(timer); return r.json(); })
+      .catch(function (e) { if (timer) clearTimeout(timer); throw e; });
   }
 
   /* ── the card ────────────────────────────────────────────────
@@ -2585,7 +2795,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
                derived: !card.tx };
     }
     var name = c.n || '', co = c.co || '';
-    var tags = (card.tg || []).map(function (t) {
+    var tags = (card.tg || []).concat(c.tags || []).map(function (t) {
       var cls = t.k ? (' ' + t.k) : '';
       return '<span class="tag' + cls + '">' + esc(t.t || t) + '</span>';
     }).join('');
@@ -2672,19 +2882,50 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
 
   /* ── go ──────────────────────────────────────────────────────── */
+  /* The home-screen link carries the bridge settings in its hash, so an
+     iOS storage wipe never orphans the deck. That used to be read only by
+     the shell, after boot had already given up. Read it first. */
+  function cfgFromHash() {
+    var h = (location.hash || '').match(/[#&]s=([A-Za-z0-9+/=_-]+)/);
+    if (!h) return null;
+    try {
+      var j = JSON.parse(decodeURIComponent(escape(atob(h[1].replace(/-/g, '+').replace(/_/g, '/')))));
+      if (j && j.url && j.key) {
+        try { localStorage.setItem(SKEY, JSON.stringify({ url: j.url, key: j.key })); } catch (e) {}
+        return { url: j.url, key: j.key };
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function boot() {
+    /* Storage first, the link's hash only when storage is empty. The hash
+       is the recovery path after an iOS wipe; it must not be the thing that
+       quietly puts a rotated-out key back every launch. */
     var cfg = null;
     try { cfg = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) {}
+    if (!cfg || !cfg.url || !cfg.key) cfg = cfgFromHash();
     if (!cfg || !cfg.url || !cfg.key) {
       gate('This deck has no contacts in it until it is connected.',
-        'Open <b>Sync settings</b> at the bottom of the Today tab and paste the bridge URL and key. ' +
-        'Everything else — who to call, what to say, which lists exist — comes from the Command Center after that.');
+        'Paste the bridge URL and key into <b>Sync settings</b>. ' +
+        'Everything else — who to call, what to say, which lists exist — comes from the Command Center after that.', true);
       window.__deckData = { contacts: [], cards: {}, tabs: [] };
       if (window.__initDeck) window.__initDeck();
       return;
     }
+    load(cfg, false);
+  }
 
-    gate('Loading your pipeline…', '');
+  /* Reload from the bridge without hunting for a gesture. A home-screen
+     web app on iOS has no pull-to-refresh; until this existed, "refresh
+     the deck" meant "kill the app and open it again", and nobody was told
+     that. The shell flushes anything unsent first, then calls this. The
+     init closure binds document-level listeners, so a full reload is the
+     honest way to rebuild rather than binding everything twice. */
+  window.__reloadDeck = function () { location.reload(); };
+
+  function load(cfg, isReload) {
+    if (!isReload) gate('Loading your pipeline…', '');
 
     deriveKey(cfg.key).then(function (k) {
       cacheKey = k;
@@ -2698,8 +2939,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         var roster = res[0], content = res[1];
         if (roster && roster.ok && roster.contacts) {
           putCache(RKEY, roster);
-          if (content && content.ok) putCache(CKEY, content);
-          return { roster: roster, content: (content && content.ok) ? content : null, stale: false };
+          if (content && content.ok) { putCache(CKEY, content); return { roster: roster, content: content, stale: false }; }
+          /* Roster fine, content not: use the cached content rather than
+             silently swapping Carlo's tabs for the built-in defaults. */
+          return cached.then(function (c) {
+            return { roster: roster, content: c[1] || null, stale: false,
+                     contentStale: !!c[1], contentWhy: (content && content.error) || 'content did not load' };
+          });
         }
         /* The bridge is unreachable or said no. Fall back to what this phone
            already has rather than showing an empty deck — an empty deck in a
@@ -2711,31 +2957,38 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       });
     }).then(function (d) {
       if (!d.roster || !d.roster.contacts || !d.roster.contacts.length) {
+        if (isReload) return false;
         gate('No contacts loaded.',
           'The bridge answered with nothing usable' + (d.why ? (': <b>' + esc(d.why) + '</b>') : '') +
-          '. Check the URL and key in Sync settings, and that the bridge was redeployed as a <b>new version</b>.');
+          '. Check the URL and key in Sync settings, and that the bridge was redeployed as a <b>new version</b>.', true);
         window.__deckData = { contacts: [], cards: {}, tabs: [] };
         if (window.__initDeck) window.__initDeck();
-        return;
+        return false;
       }
+      var notes = (d.roster.notes || []).slice();
+      if (d.contentStale) notes.unshift('Card copy and tab definitions are from this phone\'s cache (' + d.contentWhy + ').');
+      else if (!d.content) notes.unshift('Card copy and tab definitions did not load; using the built-in tabs.');
       window.__deckData = {
         contacts: d.roster.contacts,
         targets: d.roster.targets || null,
         avgOrder: d.roster.avgOrder || 500,
         cards: (d.content && d.content.cards) || {},
         tabs: (d.content && d.content.tabs) || null,
-        notes: d.roster.notes || [],
+        notes: notes,
         built: d.roster.built,
         stale: d.stale,
         why: d.why
       };
       window.__buildCard = buildCard;
       ungate();
-      if (window.__initDeck) window.__initDeck();
+      if (window.__initDeck) window.__initDeck(isReload);
+      return true;
     }).catch(function (e) {
-      gate('Something went wrong loading the deck.', esc(String(e)));
+      if (isReload) return false;
+      gate('Something went wrong loading the deck.', esc(String(e)), true);
       window.__deckData = { contacts: [], cards: {}, tabs: [] };
       if (window.__initDeck) window.__initDeck();
+      return false;
     });
   }
 
