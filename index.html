@@ -273,6 +273,12 @@ textarea.note{resize:vertical;min-height:38px;line-height:1.45;font-family:inher
   border-left:3px solid var(--brass);padding:11px 13px;border-radius:0 8px 8px 0;margin:8px 0 0}
 .psec{display:flex;flex-direction:column;gap:10px}
 .psec h3{font-size:16px;font-weight:700;border-bottom:1px solid var(--line-strong);padding-bottom:7px;margin:0}
+.orderpanel{margin-top:8px;padding:9px 10px;border:1px dashed var(--line-strong);border-radius:9px;display:flex;flex-direction:column;gap:8px}
+.orderpanel .cpo{width:130px}
+.oc,.oy{padding:5px 10px;border:1px solid var(--line-strong);border-radius:999px;background:transparent;
+  font:inherit;font-size:11.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.oc.on,.oy.on{background:#8A6A22;border-color:#8A6A22;color:#fff}
+.ordermsg{font-size:11.5px;line-height:1.35}
 .planswitch{margin-bottom:-6px}
 .planswitch .wc.on{background:var(--brass);color:#fff;border-color:var(--brass)}
 .poc p.dim{margin:2px 0 0;font-family:"IBM Plex Mono",monospace;font-size:13px}
@@ -867,7 +873,7 @@ window.__initDeck=function(){
   })();
   /* City to Bay Area region, so Nearby can group a route rather than a city. */
 var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-Valley","san ramon":"Tri-Valley","danville":"Tri-Valley","castro valley":"Tri-Valley","sunol":"Tri-Valley","oakland":"East Bay","berkeley":"East Bay","alameda":"East Bay","san leandro":"East Bay","san lorenzo":"East Bay","hayward":"East Bay","union city":"East Bay","newark":"East Bay","fremont":"East Bay","emeryville":"East Bay","piedmont":"East Bay","albany":"East Bay","el cerrito":"East Bay","richmond":"East Bay","milpitas":"East Bay","concord":"Diablo Valley","clayton":"Diablo Valley","pleasant hill":"Diablo Valley","walnut creek":"Diablo Valley","martinez":"Diablo Valley","lafayette":"Diablo Valley","orinda":"Diablo Valley","moraga":"Diablo Valley","antioch":"Diablo Valley","brentwood":"Diablo Valley","discovery bay":"Diablo Valley","byron":"Diablo Valley","pittsburg":"Diablo Valley","oakley":"Diablo Valley","benicia":"Diablo Valley","san francisco":"SF and Peninsula","south san francisco":"SF and Peninsula","daly city":"SF and Peninsula","brisbane":"SF and Peninsula","millbrae":"SF and Peninsula","burlingame":"SF and Peninsula","san mateo":"SF and Peninsula","foster city":"SF and Peninsula","belmont":"SF and Peninsula","san carlos":"SF and Peninsula","redwood city":"SF and Peninsula","menlo park":"SF and Peninsula","atherton":"SF and Peninsula","palo alto":"SF and Peninsula","hillsborough":"SF and Peninsula","pacifica":"SF and Peninsula","half moon bay":"SF and Peninsula","san bruno":"SF and Peninsula","woodside":"SF and Peninsula","portola valley":"SF and Peninsula","san jose":"South Bay","santa clara":"South Bay","sunnyvale":"South Bay","mountain view":"South Bay","cupertino":"South Bay","campbell":"South Bay","los gatos":"South Bay","saratoga":"South Bay","morgan hill":"South Bay","gilroy":"South Bay","los altos":"South Bay","monte sereno":"South Bay","san martin":"South Bay","santa cruz":"Santa Cruz","scotts valley":"Santa Cruz","capitola":"Santa Cruz","aptos":"Santa Cruz","soquel":"Santa Cruz","ben lomond":"Santa Cruz","felton":"Santa Cruz","freedom":"Santa Cruz","watsonville":"Santa Cruz","corralitos":"Santa Cruz","la selva beach":"Santa Cruz","boulder creek":"Santa Cruz","live oak":"Santa Cruz","monterey":"Monterey and Salinas","seaside":"Monterey and Salinas","marina":"Monterey and Salinas","salinas":"Monterey and Salinas","carmel":"Monterey and Salinas","carmel valley":"Monterey and Salinas","prunedale":"Monterey and Salinas","spreckels":"Monterey and Salinas","hollister":"Monterey and Salinas","pacific grove":"Monterey and Salinas","castroville":"Monterey and Salinas","gonzales":"Monterey and Salinas","novato":"North Bay","san rafael":"North Bay","san anselmo":"North Bay","petaluma":"North Bay","sonoma":"North Bay","napa":"North Bay","vallejo":"North Bay","tiburon":"North Bay","sausalito":"North Bay","mill valley":"North Bay","vacaville":"North Bay","fairfield":"North Bay","santa rosa":"North Bay","rohnert park":"North Bay","larkspur":"North Bay","corte madera":"North Bay","tracy":"Central Valley","manteca":"Central Valley","stockton":"Central Valley","modesto":"Central Valley","mountain house":"Central Valley","chowchilla":"Central Valley","merced":"Central Valley","lathrop":"Central Valley","ripon":"Central Valley","lodi":"Central Valley","turlock":"Central Valley","antelope":"Central Valley","sacramento":"Central Valley","elk grove":"Central Valley","roseville":"Central Valley","folsom":"Central Valley"};
-  var RANK=['order','booked','done','connected','em','tx','lm','dlm','bad','skip'];
+  var RANK=['order','booked','done','connected','em','tx','lm','dlm','bad','no','skip'];
   var DIALS={lm:1,dlm:1,connected:1,booked:1};   /* a tap that means "I called" */
   var OUTREACH={lm:1,dlm:1,tx:1,em:1,connected:1,booked:1,done:1,order:1};
   function best(st){
@@ -1394,6 +1400,25 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     paintHistory(c,st);
     paintWhen(c,st);
     paintNear(c,st);
+    paintOrder(c,st,m);
+  }
+  function paintOrder(c,st,m){
+    var p=c.querySelector('[data-order]'); if(!p) return;
+    p.hidden=!m.order;
+    if(!m.order) return;
+    [].forEach.call(p.querySelectorAll('.oc'),function(b){ b.classList.toggle('on', st.to===b.dataset.to); });
+    var yrs=p.querySelector('[data-years]'); if(yrs) yrs.hidden=(st.to!=='cust');
+    [].forEach.call(p.querySelectorAll('.oy'),function(b){ b.classList.toggle('on', String(st.yrs||3)===b.dataset.y); });
+    var msg=p.querySelector('[data-ordermsg]');
+    if(msg){
+      var cpo=String(st.cpo||'').replace(/[^0-9.]/g,'');
+      msg.textContent = !cpo ? 'Enter the CPO and pick where this person lives now. Nothing moves until both are set.'
+        : !st.to ? 'Pick where this person lives now.'
+        : ({res:'Stays in Residential as a customer with the follow-up date above.',
+            cust:'Moves to Customers; back on the deck for a free sharpening visit in '+(st.yrs||3)+' year'+((st.yrs||3)===1?'':'s')+' (1 to 3 for a few pieces, 3 to 5 for a set).',
+            biz:'Bought for the kitchen; lives in the Business Gift Pipeline from here.',
+            abr:'Bought for the business; becomes an ABR account with a delivery check-in in two weeks.'})[st.to] || '';
+    }
   }
 
   function paintWhen(c,st){
@@ -1718,6 +1743,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       state[id].t = Date.now(); delete state[id].exp;
       var f=c.querySelector('.wdate'); if(f) f.value=state[id].d;
       save(); push(id); paintWhen(c,state[id]);
+    });
+    /* The order panel's chips: destination, and the service year for Res Cust. */
+    c.addEventListener('click',function(e){
+      var o=e.target.closest('.oc,.oy'); if(!o) return;
+      var id=c.dataset.id; state[id]=state[id]||{};
+      if(o.classList.contains('oc')){ state[id].to = (state[id].to===o.dataset.to) ? '' : o.dataset.to; }
+      else { state[id].yrs = Number(o.dataset.y); }
+      state[id].t=Date.now(); delete state[id].exp;
+      save(); push(id); paintOrder(c,state[id],todaysM(state[id])||{});
     });
     /* Notes used to write the whole store on every keystroke. On a phone that
        iOS can suspend mid-write, that was the corruption surface. Debounced. */
@@ -2073,6 +2107,20 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     clearTimeout(flushTimer);
     flushTimer=setTimeout(function(){ flush(false); },1200);
   }
+  /* What the order panel says, as one line for Deck State's Outcome column:
+     "order cpo=3200 to=abr" or "order cpo=640 to=cust years=3". The bridge
+     moves nobody until both the amount and the destination are there. */
+  function orderOutcome(st){
+    var m=todaysM(st)||{};
+    if(!m.order) return st.n||'';
+    var parts=['order'];
+    var cpo=String(st.cpo||'').replace(/[^0-9.]/g,'');
+    if(cpo) parts.push('cpo='+cpo);
+    if(st.to) parts.push('to='+st.to);
+    if(st.to==='cust') parts.push('years='+(st.yrs||3));
+    return parts.join(' ');
+  }
+  window.__itemFor = function (id) { return itemFor(id); };   /* test hook: what the bridge will receive */
   function itemFor(id){
     var st=state[id]||{}, c=byId[id];
     return {
@@ -2080,7 +2128,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       name: c ? c.querySelector('.nm').textContent : '',
       company: c ? c.querySelector('.co').textContent : '',
       m: RANK.filter(function(v){ var tm=todaysM(st); return tm && tm[v]; }),
-      n: st.n||'', x: st.x||'', a: st.a || (st.aclr ? '(cleared)' : ''),
+      n: orderOutcome(st), x: st.x||'', a: st.a || (st.aclr ? '(cleared)' : ''),
       city: st.c||'', due: st.d || (st.dclr ? '(cleared)' : ''),
       calls: Number(st.calls||0)||0,
       t: st.t||Date.now()
@@ -2761,6 +2809,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      ['booked', '📆', 'BOOKED', 'Appointment booked'],
      ['done', '✅', 'APPT', 'Appointment held'],
      ['order', '💳', 'ORDER', 'Order written'],
+     ['no', '🙅', 'NO', 'Not interested: closes the loop, the row goes to Lost'],
      ['skip', '⏭', 'SKIP', 'Skipped today']]
     .map(function (s) {
       return '<button class="sb" data-v="' + s[0] + '" aria-pressed="false" title="' + s[3] +
@@ -2781,7 +2830,25 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       '<div class="whenrow"><span class="flbl"></span><div class="whenchips">' +
       '<button class="wc" data-when="1">Tomorrow</button><button class="wc" data-when="3">3 days</button>' +
       '<button class="wc" data-when="7">Next week</button><button class="wc" data-when="30">A month</button>' +
-      '</div></div></div></details>';
+      '</div></div>' +
+      /* The order panel. Appears when ORDER is lit. The bridge reads it on
+         the next refresh and moves the row where the chip says: Residential
+         (bought, still following up), Res Cust (bought and done for now, back
+         in N years for service), Business (bought for the kitchen, belongs in
+         the gift pipeline), ABR (bought for the business). Carlo's design,
+         Sep 3: chips, not code words in a note. */
+      '<div class="orderpanel" data-order hidden>' +
+      '<div class="frow"><span class="flbl">CPO $</span><input class="cpo fi" data-f="cpo" type="number" inputmode="decimal" placeholder="order total, CPO" aria-label="Order CPO for ' + esc(name) + '"></div>' +
+      '<div class="whenrow"><span class="flbl">Goes to</span><div class="whenchips">' +
+      '<button class="oc" data-to="res">Residential</button><button class="oc" data-to="cust">Res Cust</button>' +
+      '<button class="oc" data-to="biz">Business</button><button class="oc" data-to="abr">ABR</button></div></div>' +
+      '<div class="whenrow" data-years hidden><span class="flbl">Service in</span><div class="whenchips">' +
+      /* 1 to 5: 1 to 3 for a few pieces (they dull faster and the set is
+         not built yet), 3 to 5 for a set. Three is the catch-all default.
+         Longer than five is the CRM's job, not a scheduled follow-up. */
+      [1, 2, 3, 4, 5].map(function (y) { return '<button class="oy" data-y="' + y + '">' + y + (y === 1 ? ' yr' : ' yrs') + '</button>'; }).join('') +
+      '</div></div><div class="ordermsg dim" data-ordermsg></div></div>' +
+      '</div></details>';
   }
 
   function fmtPhone(d) {
