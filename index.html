@@ -274,6 +274,9 @@ textarea.note{resize:vertical;min-height:38px;line-height:1.45;font-family:inher
 .psec{display:flex;flex-direction:column;gap:10px}
 .psec h3{font-size:16px;font-weight:700;border-bottom:1px solid var(--line-strong);padding-bottom:7px;margin:0}
 .orderpanel{margin-top:8px;padding:9px 10px;border:1px dashed var(--line-strong);border-radius:9px;display:flex;flex-direction:column;gap:8px}
+/* display:flex on a class beats the hidden attribute; say it explicitly or
+   the panel shows on every card (Sep 4, first real open). */
+.orderpanel[hidden],.orderpanel [hidden]{display:none!important}
 .orderpanel .cpo{width:130px}
 .oc,.oy{padding:5px 10px;border:1px solid var(--line-strong);border-radius:999px;background:transparent;
   font:inherit;font-size:11.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
@@ -873,7 +876,7 @@ window.__initDeck=function(){
   })();
   /* City to Bay Area region, so Nearby can group a route rather than a city. */
 var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-Valley","san ramon":"Tri-Valley","danville":"Tri-Valley","castro valley":"Tri-Valley","sunol":"Tri-Valley","oakland":"East Bay","berkeley":"East Bay","alameda":"East Bay","san leandro":"East Bay","san lorenzo":"East Bay","hayward":"East Bay","union city":"East Bay","newark":"East Bay","fremont":"East Bay","emeryville":"East Bay","piedmont":"East Bay","albany":"East Bay","el cerrito":"East Bay","richmond":"East Bay","milpitas":"East Bay","concord":"Diablo Valley","clayton":"Diablo Valley","pleasant hill":"Diablo Valley","walnut creek":"Diablo Valley","martinez":"Diablo Valley","lafayette":"Diablo Valley","orinda":"Diablo Valley","moraga":"Diablo Valley","antioch":"Diablo Valley","brentwood":"Diablo Valley","discovery bay":"Diablo Valley","byron":"Diablo Valley","pittsburg":"Diablo Valley","oakley":"Diablo Valley","benicia":"Diablo Valley","san francisco":"SF and Peninsula","south san francisco":"SF and Peninsula","daly city":"SF and Peninsula","brisbane":"SF and Peninsula","millbrae":"SF and Peninsula","burlingame":"SF and Peninsula","san mateo":"SF and Peninsula","foster city":"SF and Peninsula","belmont":"SF and Peninsula","san carlos":"SF and Peninsula","redwood city":"SF and Peninsula","menlo park":"SF and Peninsula","atherton":"SF and Peninsula","palo alto":"SF and Peninsula","hillsborough":"SF and Peninsula","pacifica":"SF and Peninsula","half moon bay":"SF and Peninsula","san bruno":"SF and Peninsula","woodside":"SF and Peninsula","portola valley":"SF and Peninsula","san jose":"South Bay","santa clara":"South Bay","sunnyvale":"South Bay","mountain view":"South Bay","cupertino":"South Bay","campbell":"South Bay","los gatos":"South Bay","saratoga":"South Bay","morgan hill":"South Bay","gilroy":"South Bay","los altos":"South Bay","monte sereno":"South Bay","san martin":"South Bay","santa cruz":"Santa Cruz","scotts valley":"Santa Cruz","capitola":"Santa Cruz","aptos":"Santa Cruz","soquel":"Santa Cruz","ben lomond":"Santa Cruz","felton":"Santa Cruz","freedom":"Santa Cruz","watsonville":"Santa Cruz","corralitos":"Santa Cruz","la selva beach":"Santa Cruz","boulder creek":"Santa Cruz","live oak":"Santa Cruz","monterey":"Monterey and Salinas","seaside":"Monterey and Salinas","marina":"Monterey and Salinas","salinas":"Monterey and Salinas","carmel":"Monterey and Salinas","carmel valley":"Monterey and Salinas","prunedale":"Monterey and Salinas","spreckels":"Monterey and Salinas","hollister":"Monterey and Salinas","pacific grove":"Monterey and Salinas","castroville":"Monterey and Salinas","gonzales":"Monterey and Salinas","novato":"North Bay","san rafael":"North Bay","san anselmo":"North Bay","petaluma":"North Bay","sonoma":"North Bay","napa":"North Bay","vallejo":"North Bay","tiburon":"North Bay","sausalito":"North Bay","mill valley":"North Bay","vacaville":"North Bay","fairfield":"North Bay","santa rosa":"North Bay","rohnert park":"North Bay","larkspur":"North Bay","corte madera":"North Bay","tracy":"Central Valley","manteca":"Central Valley","stockton":"Central Valley","modesto":"Central Valley","mountain house":"Central Valley","chowchilla":"Central Valley","merced":"Central Valley","lathrop":"Central Valley","ripon":"Central Valley","lodi":"Central Valley","turlock":"Central Valley","antelope":"Central Valley","sacramento":"Central Valley","elk grove":"Central Valley","roseville":"Central Valley","folsom":"Central Valley"};
-  var RANK=['order','booked','done','connected','em','tx','lm','dlm','bad','no','skip'];
+  var RANK=['order','booked','done','connected','em','tx','lm','dlm','bad','no','park'];
   var DIALS={lm:1,dlm:1,connected:1,booked:1};   /* a tap that means "I called" */
   var OUTREACH={lm:1,dlm:1,tx:1,em:1,connected:1,booked:1,done:1,order:1};
   function best(st){
@@ -935,6 +938,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function savePlan(){
     try{ if(plan){ localStorage.setItem(TKEY,JSON.stringify(plan)); } else { localStorage.removeItem(TKEY); } }catch(e){}
     try{ if(nextPlan){ localStorage.setItem(NKEY,JSON.stringify(nextPlan)); } else { localStorage.removeItem(NKEY); } }catch(e){}
+  }
+  function nextOccurrence(iso){
+    var today=ymdLocalNow_();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso>=today) return iso;
+    var y=Number(today.slice(0,4)), md=iso.slice(5);
+    var cand=y+'-'+md; if(cand<today) cand=(y+1)+'-'+md;
+    return cand;
   }
   function midnight(){ var n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(); }
   function ymdLocalNow_(){ var d=new Date(); return d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate()); }
@@ -1199,9 +1209,21 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var planSet = null;
     if (q.planOnly && planIsForToday) { planSet = {}; day.ids.forEach(function (x) { planSet[x] = 1; }); }
 
+    /* An appointment beats the plan. Ron Saisi, Sep 2: an 8:30 call was on
+       the card, in Next step, and on the calendar, and the plan for the day
+       did not carry his id, so the card was not in Today. A row that is due
+       today and says it is an appointment (a clock time in the next step, or
+       BOOKED tapped on an earlier day) is on Today whether or not the plan
+       named it, at the top. */
+    function isAppt(c) {
+      var dd = dueDays(c.fu, now); if (dd === null || dd > 0) return false;
+      if (/\b\d{1,2}(:\d{2})?\s*(am|pm)\b|\b(appointment|appt|meeting|drop[- ]?in|booked|zoom|virtual)\b/i.test(c.act || '')) return true;
+      var st = state[c.id]; return !!(st && (st.h || []).some(function (h) { return /BOOKED/.test(h.m || ''); }));
+    }
     var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0;
     DATA.contacts.forEach(function (c) {
-      if (planSet && !planSet[c.id]) return;      /* Today = the plan, full stop */
+      var appt = planSet ? isAppt(c) : false;
+      if (planSet && !planSet[c.id] && !appt) return;      /* Today = the plan, plus today's appointments */
       if (q.kind && q.kind !== 'any' && c.k !== q.kind) return;
       if (q.bought === true  && !hasBought(c)) return;
       if (q.bought === false &&  hasBought(c)) return;
@@ -1216,7 +1238,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
          the "Not due until … pulled forward on purpose" chip. Running the due
          and geography filters over the plan's own list dropped most of it. */
       if (planSet) {
-        out.push({ id: c.id, c: c, due: due, detour: 0, hot: false, must: true, pin: pins[c.id] || 0 });
+        out.push({ id: c.id, c: c, due: due, detour: 0, hot: false, must: true, pin: appt ? (day.ids.length + 10) : (pins[c.id] || 0), appt: appt });
         return;
       }
       if (q.due === 'overdue' && !overdue) return;
@@ -1763,6 +1785,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         /* Emptying a field by hand is a retraction too, and it has to reach
            the sheet as one for the same reason the chip does. */
         if(f.dataset.f==='d') state[id].dclr = f.value ? 0 : 1;
+        /* A past follow-up date can only be a typo (usually the year). Move
+           it to the next time that month and day come round, and say so. */
+        if(f.dataset.f==='d' && f.value){
+          var fixed=nextOccurrence(f.value);
+          if(fixed!==f.value){
+            f.value=fixed; state[id].d=fixed;
+            banner('That follow-up date had already passed. Set to '+fixed+' instead; change it on the card if that is wrong.');
+          }
+        }
         if(f.dataset.f==='a') state[id].aclr = f.value ? 0 : 1;
         clearTimeout(timers[f.dataset.f]);
         var isCity=f.dataset.f==='c';
@@ -2674,6 +2705,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(!was) return;
     var n=archiveDay();
     GEOSET=null; try{ localStorage.removeItem(GEO_KEY); }catch(e){}
+    /* the preview becomes the plan here too: a phone left open overnight
+       never reboots, so the boot-time promotion never runs for it */
+    if(promoteNext()){ applyPlan(); renderPlanDoc(); }
     buildGeoBar(); cards.forEach(paint); counts(); countTabs(); applyQuery(selTab()); filter();
     banner('New day. '+(n?n+' logged contact'+(n===1?'':'s')+' moved into history. ':'')+'Tap Refresh deck for today\'s roster.',true);
   });
@@ -2809,8 +2843,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      ['booked', '📆', 'BOOKED', 'Appointment booked'],
      ['done', '✅', 'APPT', 'Appointment held'],
      ['order', '💳', 'ORDER', 'Order written'],
-     ['no', '🙅', 'NO', 'Not interested: closes the loop, the row goes to Lost'],
-     ['skip', '⏭', 'SKIP', 'Skipped today']]
+     ['no', '⛔', "DON'T CALL", 'Not interested or a dead lead: the row goes to Lost and never comes back on a plan'],
+     ['park', '🅿️', 'PARK', 'Nothing to call about: a past customer out of the way. Keeps the record on Customers, off the deck, no return date']]
     .map(function (s) {
       return '<button class="sb" data-v="' + s[0] + '" aria-pressed="false" title="' + s[3] +
              '"><em>' + s[1] + '</em>' + s[2] + '</button>';
@@ -2826,7 +2860,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
          the text field above instead — which no plan has ever read. The
          chips are what they always were: shortcuts for the common cases. */
       '<div class="frow"><span class="flbl">Next FU date</span>' +
-      '<input class="wdate fi" data-f="d" type="date" aria-label="Follow-up date for ' + esc(name) + '"></div>' +
+      '<input class="wdate fi" data-f="d" type="date" min="' + todayIso() + '" aria-label="Follow-up date for ' + esc(name) + '"></div>' +
       '<div class="whenrow"><span class="flbl"></span><div class="whenchips">' +
       '<button class="wc" data-when="1">Tomorrow</button><button class="wc" data-when="3">3 days</button>' +
       '<button class="wc" data-when="7">Next week</button><button class="wc" data-when="30">A month</button>' +
@@ -2851,6 +2885,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       '</div></details>';
   }
 
+  /* A follow-up date is a promise about the future. The picker is told so,
+     and a past date typed anyway is caught in the shell (Feb 4 2026, typed
+     in September: the year was wrong and nothing said so). */
+  function todayIso() { var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
   function fmtPhone(d) {
     return d && d.length === 10 ? '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6) : d;
   }
@@ -3027,7 +3065,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       (region ? '<span class="regionchip"' + (c.city ? '' : ' data-guess="1"') + '>' + esc(region) + '</span>' : '') +
       '</div>' +
       dialBar(c, card) + STATUS +
-      lead + callOl + txOl + emOl + results(name) +
+      /* Results sits right under the status chips: the tap and the note are
+         the same moment, and Lead info can run long (Sep 4, Carlo: scrolling
+         from the chips down past Lead info to the note broke the flow). */
+      results(name) + lead + callOl + txOl + emOl +
       '</div></article>';
   }
 
