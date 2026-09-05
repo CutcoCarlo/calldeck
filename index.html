@@ -3193,7 +3193,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 /* v4.0 status styling — placed last so it wins the cascade over the original theme */
 .status{flex-wrap:nowrap;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .status .sb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:6px 2px 5px;font-size:8.5px;font-weight:700;letter-spacing:.02em;line-height:1;
+  padding:6px 1px 5px;font-size:8px;font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap;
   border:1.5px solid var(--line-strong);border-radius:9px}
 .status .sb em{font-style:normal;font-size:15px;line-height:1;filter:grayscale(1);opacity:.75}
 .status .sb[aria-pressed="true"] em{filter:none;opacity:1}
@@ -3212,10 +3212,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 .card[data-s="done"] .spine{background:#6FBF8F}
 .card[data-s="order"] .spine{background:#2F7D4F}
 
-/* ── v5.0 ───────────────────────────────────────────────────────
-   Ten statuses now, so the row becomes a 5x2 grid. Top row is what you
-   did (blue). Bottom row is what came of it (traffic light). */
-.status{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;overflow:visible}
+/* ── v5.0 / Sep 4 ───────────────────────────────────────────────
+   Eleven statuses, a 6x2 grid. Top row is the dial and what it reached
+   (LM DLM TX EM BAD# SPOKE). Bottom row is where the person went
+   (BOOKED APPT ORDER DON'T CALL PARK). */
+.status{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;overflow:visible}
 .status .sb{flex:none;width:auto}
 .status .sb[data-v="dlm"][aria-pressed="true"]{background:#5C7FA8;color:#fff;border-color:#1F3A5F}
 .status .sb[data-v="bad"][aria-pressed="true"]{background:#5A5A5A;color:#fff;border-color:#3A3A3A}
