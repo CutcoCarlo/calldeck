@@ -1215,15 +1215,55 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
        today and says it is an appointment (a clock time in the next step, or
        BOOKED tapped on an earlier day) is on Today whether or not the plan
        named it, at the top. */
-    function isAppt(c) {
-      var dd = dueDays(c.fu, now); if (dd === null || dd > 0) return false;
-      if (/\b\d{1,2}(:\d{2})?\s*(am|pm)\b|\b(appointment|appt|meeting|drop[- ]?in|booked|zoom|virtual)\b/i.test(c.act || '')) return true;
-      var st = state[c.id]; return !!(st && (st.h || []).some(function (h) { return /BOOKED/.test(h.m || ''); }));
+    /* The date the card is really on: what Carlo tapped, until the sheet
+       carries it, then the sheet. */
+    function effFu(c) {
+      var st = state[c.id];
+      if (st && st.dclr) return '';
+      return (st && st.d) || c.fu || '';
     }
-    var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0;
+    /* Sep 9: Tina Kojima bought on the 8th, "9/8 at 6pm" stayed on the row,
+       and the next morning she was one day overdue with a clock time in her
+       next step — so the net built for Ron Saisi pinned her to the top of
+       Today as a missed appointment. The net now catches only a row due
+       TODAY, and never one whose conversation is already closed: an ORDER,
+       DONE, DON'T CALL or PARK tapped today or on any day since the BOOKED. */
+    function isAppt(c) {
+      var dd = dueDays(effFu(c), now); if (dd !== 0) return false;
+      var st = state[c.id];
+      if (st && st.m && (st.m.order || st.m.done || st.m.no || st.m.park)) return false;
+      var h = (st && st.h) || [], booked = -1, closed = -1;
+      h.forEach(function (x, i) {
+        var m = x.m || '';
+        if (/BOOKED/.test(m)) booked = i;
+        if (/ORDER|DONE|\bNO\b|PARK/.test(m)) closed = i;
+      });
+      if (st && st.m && st.m.booked) booked = h.length;       /* booked on a day not yet archived */
+      if (booked >= 0) return closed <= booked;                /* booked, and not finished since */
+      /* never BOOKED on the phone: a conversation closed in the last week is
+         over; an older DONE does not cancel a new time typed in the next step */
+      if (closed >= 0 && withinDays(h[closed].d, 7)) return false;
+      return /\b\d{1,2}(:\d{2})?\s*(am|pm)\b|\b(appointment|appt|meeting|drop[- ]?in|booked|zoom|virtual)\b/i.test(c.act || '');
+    }
+    function withinDays(mmdd, days) {
+      var m = String(mmdd || '').match(/^(\d{1,2})\/(\d{1,2})$/); if (!m) return false;
+      var d = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]), 12);
+      if (d.getTime() > now.getTime() + 86400000) d.setFullYear(d.getFullYear() - 1);
+      return (now.getTime() - d.getTime()) / 86400000 <= days;
+    }
+    /* A plan can name someone Carlo has already dated for later on the
+       phone (the bridge tags the row "Dated on the phone"). His date wins:
+       the card is held back and counted, not shown. */
+    function heldBack(c) {
+      if (!c.pd) return false;
+      var dd = dueDays(effFu(c), now);
+      return dd !== null && dd > 0;
+    }
+    var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0, held = 0;
     DATA.contacts.forEach(function (c) {
       var appt = planSet ? isAppt(c) : false;
       if (planSet && !planSet[c.id] && !appt) return;      /* Today = the plan, plus today's appointments */
+      if (planSet && planSet[c.id] && !appt && heldBack(c)) { held++; return; }
       if (q.kind && q.kind !== 'any' && c.k !== q.kind) return;
       if (q.bought === true  && !hasBought(c)) return;
       if (q.bought === false &&  hasBought(c)) return;
@@ -1398,7 +1438,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       : ('On the way to ' + geo.place);
     return { rows: out, mark: mark, shortBy: shortBy, want: want,
              geo: label, offRoute: offRoute, noCity: noCity, mustOff: mustOff,
-             tooFar: tooFar };
+             tooFar: tooFar, held: held };
   }
 
   var cards=[].slice.call(document.querySelectorAll('.card'));
@@ -2331,6 +2371,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         'Tap Anywhere to see them.');
       if(res.tooFar) bits.push(res.tooFar+' too far from home to be worth the drive for what they are worth. '+
         'Pick a region to plan a trip out there.');
+      if(res.held) bits.push(res.held+' on the plan held back: you dated them for later on the phone.');
       if(res.want) bits.push('Plan says '+(res.want.b||0)+' business and '+(res.want.r||0)+
         ' residential'+(res.shortBy?(' — the pipeline is '+res.shortBy+' short of that'):''));
       note.innerHTML=bits.join('<br>');
@@ -2933,15 +2974,19 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function derive(c) {
     var first = firstName(c.n);
     var ev = cleanEvent(c.met);
-    var want = String(c.want || '').replace(/\s+/g, ' ').trim();
+    /* Sep 10: this fallback used to paste the Wishlist / Opp Notes cell into
+       the message ("Hey Bill, it's Carlo with Cutco. owns Morgan Stanley -
+       open to gifts. Got 10 minutes?"), which read as Carlo's private notes
+       sent to the customer. A card with no written draft now gets a short,
+       safe opener and nothing from the row. The real drafts come with the
+       plan. */
     var lines = ['Hi ' + first + ',', ''];
     lines.push('Carlo with Cutco here.' + (ev ? (' We met at the ' + ev + '.') : ''));
-    if (want) { lines.push(''); lines.push(want); }
     lines.push('');
-    lines.push("Do you have 10 minutes this week? Reply with a couple of times that work and I'll make one of them happen.");
-    var tx = "Hey " + first + ", it's Carlo with Cutco." +
-      (want ? (' ' + want.charAt(0).toLowerCase() + want.slice(1)) : '') +
-      ' Got 10 minutes this week?';
+    lines.push("Do you have a few minutes this week to catch up? Reply with a couple of times that work and I'll make one of them happen.");
+    var tx = "Hey " + first + ", it's Carlo with Cutco." + (ev ? (' We met at the ' + ev + '.') : '') +
+      ' Got a few minutes this week to catch up?';
+    var want = String(c.want || '').replace(/\s+/g, ' ').trim();
     return { tx: tx.replace(/\s+/g, ' '), es: subjectFrom(want, c.met), eb: lines.join('\n'), derived: true };
   }
 
