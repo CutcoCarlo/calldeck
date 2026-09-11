@@ -1015,7 +1015,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   /* Personal calls get their own tab the moment one exists, without a
      content.json edit: the tax guy is not a tab Claude should have to ship. */
   if (DATA.contacts.some(function (c) { return c.k === 'p'; }) && !TABS.some(function (t) { return t.id === 'personal'; })) {
-    TABS.push({ id: 'personal', title: 'Personal', q: { kind: 'p', sort: 'fu', geo: false, homeDistance: false } });
+    /* right after Today: Plan, Today and Personal are the three tabs Carlo
+       lives in; the rest are for the rare long day */
+    var at = 0; TABS.forEach(function (t, i) { if (t.id === 'today') at = i + 1; });
+    TABS.splice(at, 0, { id: 'personal', title: 'Personal', q: { kind: 'p', sort: 'fu', geo: false, homeDistance: false } });
   }
   /* and every other list ignores them: a personal call is never a pipeline row */
   TABS.forEach(function (t) { if (t.q && !t.q.kind && t.id !== 'today') t.q.kindNot = 'p'; });
@@ -3327,7 +3330,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
           if (c.email && c.email.length) $('ad-em').value = String(c.email[0]);
           $('ad-msg').textContent = 'From your contacts. Add the reason and save.';
           $('ad-why').focus();
-        }).catch(function () { /* cancelled, or refused: the form is still there */ });
+        }).catch(function () {
+          /* iOS offers the picker in Safari but not to a home-screen app */
+          $('ad-msg').textContent = 'Your phone did not hand over Contacts here (home-screen apps are not allowed to). Open the deck in Safari for that, or type the name.';
+        });
       });
     }
     $('ad-cancel').addEventListener('click', function () { wrap.hidden = true; });
@@ -3371,7 +3377,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
           if (!d || !d.ok) { msg.textContent = 'Not saved: ' + ((d && d.error) || 'the bridge did not answer'); return; }
           if (d.skipped && d.skipped.length && !(d.landed && d.landed.length)) { msg.textContent = 'Not added: ' + d.skipped[0]; return; }
           var id = (d.landed && d.landed[0] && d.landed[0].id) || '';
-          msg.textContent = 'Saved' + (id ? ' as ' + id : '') + '. Refreshing the deck…';
+          msg.textContent = 'Saved' + (id ? ' as ' + id : '') + '. The deck reloads now and opens the card.';
           try { sessionStorage.setItem('cc-deck-open', id); } catch (e) {}
           setTimeout(function () {
             var rb = document.getElementById('refresh');
