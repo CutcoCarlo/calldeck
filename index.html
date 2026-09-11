@@ -329,6 +329,21 @@ footer .m{font-size:12px;color:var(--ink-3)}
 #logout{width:100%;min-height:150px;margin-top:11px;border:1px solid var(--line);border-radius:8px;
   background:var(--surface);color:var(--ink);font-family:"IBM Plex Mono",monospace;font-size:12px;padding:11px;resize:vertical}
 #logwrap[hidden]{display:none}
+.addwrap{margin:8px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.addwrap[hidden]{display:none}
+.addwrap input,.addwrap textarea{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink);font:inherit;font-size:14px}
+.addwrap textarea{min-height:64px}
+.addwrap input[hidden]{display:none}
+.addwrap .ad-fu{display:block;margin-top:8px;font-size:12.5px;color:var(--ink-3)}
+.addwrap .ad-fu input{margin-top:4px}
+.kindchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.kc{font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-3)}
+.kc[aria-pressed="true"]{border-color:var(--brass);color:var(--brass)}
+.card.k-pers .spine{background:#7a8b99}
+.tag.line{border-color:var(--brass);color:var(--brass)}
+.pdraft{margin-top:4px;font-size:12.5px}
+.pdraft summary{cursor:pointer;color:var(--ink-3);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+.pdraft .txmsg{white-space:pre-wrap;margin:6px 0 0}
 
 @media (max-width:430px){
   .blk{grid-template-columns:1fr;gap:2px}
@@ -428,6 +443,21 @@ footer .m{font-size:12px;color:var(--ink-3)}
 </div>
 
 <footer>
+<button class="logbtn" id="addperson">Add a person</button>
+<div id="addwrap" class="addwrap" hidden>
+<p class="m"><b>Add a person from here.</b> Whatever you know now; research and the rest of the row come later. Pick what kind of call this is.</p>
+<div class="kindchips" id="ad-kinds"><button class="kc" data-kind="b" aria-pressed="true">Business</button><button class="kc" data-kind="r" aria-pressed="false">Residential</button><button class="kc" data-kind="abr" aria-pressed="false">ABR</button><button class="kc" data-kind="p" aria-pressed="false">Personal</button></div>
+<input id="ad-name" type="text" placeholder="Name" autocapitalize="words" autocorrect="off" aria-label="Name">
+<input id="ad-co" type="text" placeholder="Company" autocapitalize="words" autocorrect="off" aria-label="Company">
+<input id="ad-ph" type="tel" placeholder="Phone" aria-label="Phone">
+<input id="ad-em" type="email" placeholder="Email" autocapitalize="none" autocorrect="off" aria-label="Email">
+<input id="ad-city" type="text" placeholder="City" autocapitalize="words" aria-label="City">
+<input id="ad-why" type="text" placeholder="Why you're calling (this becomes the next step)" aria-label="Why you're calling">
+<input id="ad-bought" type="text" placeholder="What they bought, and when (2025: $1,800 client gifts)" aria-label="What they bought">
+<label class="ad-fu">Follow up on <input id="ad-fu" type="date" aria-label="Follow-up date"></label>
+<textarea id="ad-notes" placeholder="Notes" aria-label="Notes"></textarea>
+<div class="dayrow"><button class="daybtn primary" id="ad-save">Save</button><button class="daybtn" id="ad-cancel">Cancel</button><span id="ad-msg"></span></div>
+</div>
 <button class="logbtn" id="mklog">End my day</button>
 <div id="logwrap" hidden>
 <div class="totrow">
@@ -980,7 +1010,14 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     { id: 'nurture', title: 'Nurture',   q: { kind: 'b', untouched: 45, sort: 'value', cap: 40 } },
     { id: 'all',     title: 'Everyone',  q: { sort: 'score' } }
   ];
-  var TABS = (DATA.tabs && DATA.tabs.length) ? DATA.tabs : DEFAULT_TABS;
+  var TABS = ((DATA.tabs && DATA.tabs.length) ? DATA.tabs : DEFAULT_TABS).slice();
+  /* Personal calls get their own tab the moment one exists, without a
+     content.json edit: the tax guy is not a tab Claude should have to ship. */
+  if (DATA.contacts.some(function (c) { return c.k === 'p'; }) && !TABS.some(function (t) { return t.id === 'personal'; })) {
+    TABS.push({ id: 'personal', title: 'Personal', q: { kind: 'p', sort: 'fu', geo: false, homeDistance: false } });
+  }
+  /* and every other list ignores them: a personal call is never a pipeline row */
+  TABS.forEach(function (t) { if (t.q && !t.q.kind && t.id !== 'today') t.q.kindNot = 'p'; });
   var TABBY = {}; TABS.forEach(function (t) { TABBY[t.id] = t; });
 
   (function renderPool() {
@@ -1259,12 +1296,22 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var dd = dueDays(effFu(c), now);
       return dd !== null && dd > 0;
     }
+    /* A personal call due today is on Today whether or not the plan named
+       it (the plan lists them under Other tasks, not in the call count).
+       Not on any other list unless the tab asks for kind p. */
+    function persDue(c) {
+      if (c.k !== 'p') return false;
+      var dd = dueDays(effFu(c), now);
+      return dd !== null && dd <= 0;
+    }
     var out = [], offRoute = 0, noCity = 0, mustOff = 0, tooFar = 0, held = 0;
     DATA.contacts.forEach(function (c) {
-      var appt = planSet ? isAppt(c) : false;
+      var appt = planSet ? (isAppt(c) || persDue(c)) : false;
       if (planSet && !planSet[c.id] && !appt) return;      /* Today = the plan, plus today's appointments */
+      if (!planSet && c.k === 'p' && q.kind !== 'p' && !(q.due === 'today' && persDue(c))) return;
       if (planSet && planSet[c.id] && !appt && heldBack(c)) { held++; return; }
       if (q.kind && q.kind !== 'any' && c.k !== q.kind) return;
+      if (q.kindNot && c.k === q.kindNot) return;
       if (q.bought === true  && !hasBought(c)) return;
       if (q.bought === false &&  hasBought(c)) return;
       if (q.stageNot && q.stageNot.map(lc).indexOf(lc(c.stage)) > -1) return;
@@ -1278,7 +1325,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
          the "Not due until … pulled forward on purpose" chip. Running the due
          and geography filters over the plan's own list dropped most of it. */
       if (planSet) {
-        out.push({ id: c.id, c: c, due: due, detour: 0, hot: false, must: true, pin: appt ? (day.ids.length + 10) : (pins[c.id] || 0), appt: appt });
+        var realAppt = appt && c.k !== 'p' && isAppt(c);
+        out.push({ id: c.id, c: c, due: due, detour: 0, hot: false, must: true,
+                   pin: realAppt ? (day.ids.length + 10) : (pins[c.id] || (c.k === 'p' ? 0.5 : 0)), appt: realAppt });
         return;
       }
       if (q.due === 'overdue' && !overdue) return;
@@ -1873,9 +1922,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var c=CON[id]; if(!c){ missing++; return; }
       var who=hesc(c.n||id)+(c.co?' <span class="dim">· '+hesc(c.co)+'</span>':'');
       var why=hesc(c.act||c.want||'');
+      var d=(p.msgs&&p.msgs[id])||null;
       h+='<div class="poc"><span class="pn">'+(i+1)+'</span><div><b>'+who+'</b>'
         +(c.ph?'<p class="dim">'+hesc(c.ph)+'</p>':'')
-        +(why?'<p>'+why+'</p>':'')+'</div></div>';
+        +(d&&d.line?'<p><b>Ask:</b> '+hesc(d.line)+'</p>':(why?'<p>'+why+'</p>':''))
+        +(d&&d.tx?'<details class="pdraft"><summary>Text draft</summary><p class="txmsg">'+hesc(d.tx)+'</p></details>':'')
+        +(d&&(d.es||d.eb)?'<details class="pdraft"><summary>Email draft</summary><p class="txsub"><b>Subject:</b> '+hesc(d.es||'')+'</p><p class="txmsg">'+hesc(d.eb||'')+'</p></details>':'')
+        +'</div></div>';
     });
     if(missing) h+='<div class="ptask">'+missing+' name'+(missing===1?'':'s')+' on the plan '+(missing===1?'is':'are')+' not on this deck yet. Refresh deck.</div>';
     return h+'</div>';
@@ -1965,7 +2018,70 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
                      : d<today ? ('Follow-up was due '+(d.getMonth()+1)+'/'+d.getDate())
                      : 'Due today';
   }
+  /* ── drafts that come with the plan ───────────────────────────
+     Sep 10, Carlo: "I don't want you writing an email now and then I go to
+     send it in a month." The text, the email and the call outline for a
+     card are written the night before, for that day, from the voice doc
+     and the thread, and arrive on the plan as msgs[id]. They replace the
+     card's standing copy for that day only and expire with the plan; the
+     "line" is the ask the day is for (Bettger's ball and line: the next
+     small commitment, never two). */
+  function olsecHtml(lbl, body){ return body ? '<div class="ol-sec"><span class="ol-lbl">'+lbl+'</span><div class="ol-body">'+body+'</div></div>' : ''; }
+  function applyDraft(el, c, d){
+    if(!el || !d) return;
+    var sms=el.querySelector('a.sms');
+    if(sms && d.tx && c && c.ph) sms.setAttribute('href','sms:+1'+c.ph+'&body='+encodeURIComponent(d.tx));
+    var mail=el.querySelector('a.mailbtn');
+    if(mail && (d.es||d.eb) && c && c.em) mail.setAttribute('href','mailto:'+encodeURIComponent(c.em)+'?subject='+encodeURIComponent(d.es||'')+'&body='+encodeURIComponent(d.eb||''));
+    function sec(name){ return el.querySelector('details.sec[data-sec="'+name+'"]'); }
+    function ensure(name, title, after){
+      var x=sec(name); if(x) return x;
+      x=document.createElement('details'); x.className='sec'; x.dataset.sec=name;
+      x.innerHTML='<summary>'+title+'</summary><div class="inner"></div>';
+      var ref=sec(after);
+      if(ref && ref.nextSibling) ref.parentNode.insertBefore(x, ref.nextSibling);
+      else if(ref) ref.parentNode.appendChild(x);
+      else { var bd=el.querySelector('.bd'); if(bd) bd.appendChild(x); }
+      return x;
+    }
+    if(d.tx){
+      var t=ensure('text','Text outline','call');
+      t.querySelector('.inner').innerHTML='<p class="dim">Written for today</p><p class="txmsg">'+hesc(d.tx)+'</p><button class="cpy cpymsg" data-from=".txmsg" data-lbl="Copy text">Copy text</button>';
+    }
+    if(d.es||d.eb){
+      var em=ensure('email','Email outline', sec('text')?'text':'call');
+      em.querySelector('.inner').innerHTML='<p class="dim">Written for today</p><p class="txsub"><b>Subject:</b> '+hesc(d.es||'')+'</p><p class="txmsg">'+hesc(d.eb||'')+'</p><button class="cpy cpymsg" data-from=".txmsg" data-lbl="Copy email">Copy email</button>';
+    }
+    if(d.line||d.open||d.cta||(d.work&&d.work.length)){
+      var cs=sec('call');
+      if(cs){
+        var inner=cs.querySelector('.inner'), live=inner.querySelector('.ol-sec');
+        var html='';
+        if(d.line) html+=olsecHtml('The line today', hesc(d.line));
+        if(d.open) html+=olsecHtml('Open with', hesc(d.open));
+        if(d.work&&d.work.length) html+=olsecHtml('Work through','<ul class="outline">'+d.work.map(function(w){ return '<li>'+hesc(w)+'</li>'; }).join('')+'</ul>');
+        if(d.cta) html+=olsecHtml('Ask for', hesc(d.cta));
+        inner.innerHTML='';
+        if(live) inner.appendChild(live);
+        inner.insertAdjacentHTML('beforeend', html);
+      }
+    }
+    if(d.line){
+      var tags=el.querySelector('.tags');
+      if(tags){
+        var chip=tags.querySelector('[data-linechip]');
+        if(!chip){ chip=document.createElement('span'); chip.className='tag line'; chip.setAttribute('data-linechip',''); tags.appendChild(chip); }
+        chip.textContent='Ask: '+d.line;
+      }
+    }
+  }
+  function paintDrafts(){
+    if(!plan || !plan.msgs) return;
+    if(String(plan.date||'').slice(0,10)!==ymdLocalNow_()) return;   /* drafts are for their day */
+    for(var id in plan.msgs){ applyDraft(byId[id], CON[id], plan.msgs[id]); }
+  }
   function applyPlan(){
+    paintDrafts();
     if(plan && plan.due){
       for(var id in plan.due){ var c=byId[id]; if(c) dueChip(c,plan.due[id]); }
     }
@@ -2724,6 +2840,18 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var archived=archiveDay();
   var promoted=promoteNext();
   applyPlan(); renderPlanDoc(); applySecs(); cards.forEach(paint); counts(); syncState();
+  /* a person just added from the form: land on their card */
+  (function(){
+    var want=''; try{ want=sessionStorage.getItem('cc-deck-open')||''; sessionStorage.removeItem('cc-deck-open'); }catch(e){}
+    if(!want) return;
+    var el=byId[want];
+    if(!el){ banner('Saved to the Command Center. The card will be here on the next refresh.', true); return; }
+    var c=CON[want], home='';
+    for(var i=0;i<TABS.length;i++){ var t=TABS[i]; if(t.kind==='plan') continue; if(evalTab(t.id).rows.some(function(r){ return r.id===want; })){ home=t.id; break; } }
+    if(home) setTab(home);
+    setTimeout(function(){ try{ el.scrollIntoView({block:'center'}); }catch(e){ el.scrollIntoView(); } }, 50);
+    banner('Added '+(c?c.n:want)+(home?' (on the '+(TABBY[home].title)+' tab)':'')+'. Research comes later; the card is ready to call from now.', true);
+  })();
   if(!storageOK) banner(storageNote);
   else if(archived) banner('Yesterday’s '+archived+' logged contact'+(archived===1?'':'s')+' moved into history. Cards are clean.',true);
   buildGeoBar();
@@ -2731,7 +2859,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   setTab(TABS[0] ? TABS[0].id : 'today');
   if(DATA.stale) banner('Showing the copy saved on this phone — '+(DATA.why||'the bridge did not answer')+'. Tap Refresh deck in Sync settings when you have signal.');
   else if(DATA.notes && DATA.notes.length) banner(DATA.notes.join(' · '));
-  else if(DATA.gaps && DATA.gaps.length) banner(DATA.gaps.length+' contacts have no call outline written yet. Ask for them in the Command Center project.',true);
+  else if(DATA.gaps && DATA.gaps.length){
+    /* a personal call never needs an outline, and a card the plan wrote for today has one */
+    var gapIds=DATA.gaps.filter(function(id){ var c=CON[id]; return c && c.k!=='p' && !(plan && plan.msgs && plan.msgs[id] && String(plan.date||'').slice(0,10)===ymdLocalNow_()); });
+    if(gapIds.length) banner(gapIds.length+' contact'+(gapIds.length===1?' has':'s have')+' no call outline written yet. Tonight\'s plan writes them for whoever is on it.',true);
+  }
   /* built time in the footer, so "is this today's roster" has an answer */
   (function(){ var bl=document.getElementById('buildline'); if(bl && DATA.built){ var b=new Date(DATA.built); bl.textContent='v6.1 · roster '+(isNaN(b)?DATA.built:b.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})); } })();
   /* A deck left open across midnight — the common case for a phone that is
@@ -3085,7 +3217,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 
     var amt = card.amt || (c.init ? ('$' + (c.init >= 1000 ? (Math.round(c.init / 100) / 10) + 'K' : c.init)) : '');
 
-    return '<article class="card' + (c.k === 'b' ? ' k-biz' : ' k-res') + '"' +
+    return '<article class="card' + (c.k === 'b' ? ' k-biz' : c.k === 'p' ? ' k-pers' : ' k-res') + '"' +
       ' data-id="' + esc(c.id) + '"' +
       ' data-k="' + esc(c.k) + '"' +
       ' data-ps="' + (Math.round(c.ps * 100) / 100) + '"' +
@@ -3101,7 +3233,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       '<div class="spine"></div><div class="bd">' +
       '<div class="hd"><span class="rk"></span><span class="who">' +
       '<span class="nm">' + esc(name) + '</span>' +
-      '<span class="co">' + esc(co || (c.city ? c.city + ' · residential' : 'Residential')) + '</span>' +
+      '<span class="co">' + esc(co || (c.k === 'p' ? (c.want ? 'Personal · ' + c.want : 'Personal call') : (c.city ? c.city + ' · residential' : 'Residential'))) + '</span>' +
       '</span><span class="amt">' + esc(amt) + '</span></div>' +
       '<div class="tags">' + tags + '</div>' +
       '<div class="cityrow">' +
@@ -3151,6 +3283,85 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     }
     load(cfg, false);
   }
+
+  /* ── Add a person ─────────────────────────────────────────────
+     Shem, Sep 9: a deal with a name and a number and no row, three plans in
+     a row saying "call Thursday", and no way to add him from the car. One
+     form, four kinds. It posts through the same intake route Lead Capture
+     uses (the bridge key, no second key on the phone), the bridge mints the
+     Deck ID on the spot, and the deck refreshes so the card is there to
+     call from. Business and residential rows land tagged Unresearched;
+     Lead Capture fills the research in later, onto the same row. */
+  function addForm(cfg) {
+    var btn = $('addperson'), wrap = $('addwrap');
+    if (!btn || !wrap) return;
+    var kind = 'b';
+    function paintKind() {
+      [].forEach.call(wrap.querySelectorAll('.kc'), function (b) { b.setAttribute('aria-pressed', b.dataset.kind === kind ? 'true' : 'false'); });
+      $('ad-co').hidden = !(kind === 'b' || kind === 'abr');
+      $('ad-bought').hidden = kind !== 'abr';
+      $('ad-why').placeholder = kind === 'p' ? 'Reason for the call' : kind === 'abr' ? 'Why you\'re calling (the review, a reorder, a delivery)' : 'Why you\'re calling (this becomes the next step)';
+    }
+    function tomorrowIso() { var d = new Date(); d.setDate(d.getDate() + 1); var p = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+    function reset() {
+      ['ad-name', 'ad-co', 'ad-ph', 'ad-em', 'ad-city', 'ad-why', 'ad-bought', 'ad-notes'].forEach(function (id) { var el = $(id); if (el) el.value = ''; });
+      $('ad-fu').min = todayIso(); $('ad-fu').value = tomorrowIso(); $('ad-msg').textContent = '';
+    }
+    btn.addEventListener('click', function () {
+      wrap.hidden = !wrap.hidden;
+      if (!wrap.hidden) { reset(); paintKind(); $('ad-name').focus(); }
+    });
+    $('ad-cancel').addEventListener('click', function () { wrap.hidden = true; });
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.kc') : null;
+      if (!b) return;
+      kind = b.dataset.kind; paintKind();
+    });
+    $('ad-save').addEventListener('click', function () {
+      var v = function (id) { var el = $(id); return el ? String(el.value || '').trim() : ''; };
+      var name = v('ad-name'), co = v('ad-co'), ph = v('ad-ph'), em = v('ad-em'), city = v('ad-city'), why = v('ad-why'), fu = v('ad-fu'), notes = v('ad-notes'), bought = v('ad-bought');
+      var msg = $('ad-msg');
+      if (!name) { msg.textContent = 'A name, at least.'; $('ad-name').focus(); return; }
+      if ((kind === 'b' || kind === 'abr') && !co) { msg.textContent = 'Which company?'; $('ad-co').focus(); return; }
+      if (fu && fu < todayIso()) { msg.textContent = 'That date has passed.'; return; }
+      var f = {};
+      if (kind === 'p') {
+        f['Name'] = name; if (ph) f['Phone'] = ph; if (em) f['Email'] = em; if (city) f['City'] = city;
+        if (why) { f['Reason'] = why; f['Action'] = why; }
+        if (fu) f['Next FU Date'] = fu; if (notes) f['Notes'] = notes;
+      } else {
+        f['Contact Person'] = name; if (co) f['Company'] = co;
+        if (ph) f['Phone'] = ph; if (em) f['Email'] = em; if (city) f['City'] = city;
+        if (why) f['Action'] = why; if (fu) f['Next FU Date'] = fu;
+        if (kind === 'abr') {
+          if (notes) f['Notes'] = notes;
+          if (bought) {
+            var m = bought.match(/(\d{4})\D*\$?\s*([\d,]+(?:\.\d+)?)\s*[-:]?\s*(.*)$/);
+            if (m) { f['Program Log'] = m[1] + ': $' + m[2].replace(/,/g, '') + (m[3] ? ' - ' + m[3].trim() : ''); f['Lifetime CPO'] = Number(m[2].replace(/,/g, '')) || ''; }
+            else f['Additional Opportunities'] = bought;
+          }
+        } else if (notes) f['Contact Notes (Running Log)'] = notes;
+      }
+      msg.textContent = 'Saving…';
+      $('ad-save').disabled = true;
+      fetch(cfg.url, { method: 'POST', body: JSON.stringify({ k: cfg.key, fn: 'addlead', source: 'phone', rows: [{ kind: kind, fields: f }] }) })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          $('ad-save').disabled = false;
+          if (!d || !d.ok) { msg.textContent = 'Not saved: ' + ((d && d.error) || 'the bridge did not answer'); return; }
+          if (d.skipped && d.skipped.length && !(d.landed && d.landed.length)) { msg.textContent = 'Not added: ' + d.skipped[0]; return; }
+          var id = (d.landed && d.landed[0] && d.landed[0].id) || '';
+          msg.textContent = 'Saved' + (id ? ' as ' + id : '') + '. Refreshing the deck…';
+          try { sessionStorage.setItem('cc-deck-open', id); } catch (e) {}
+          setTimeout(function () {
+            var rb = document.getElementById('refresh');
+            if (rb) rb.click(); else if (window.__reloadDeck) window.__reloadDeck(); else location.reload();
+          }, 900);
+        })
+        .catch(function (e) { $('ad-save').disabled = false; msg.textContent = 'Not saved: ' + String(e); });
+    });
+  }
+  window.__addForm = addForm;
 
   /* Reload from the bridge without hunting for a gesture. A home-screen
      web app on iOS has no pull-to-refresh; until this existed, "refresh
@@ -3218,6 +3429,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       window.__buildCard = buildCard;
       ungate();
       if (window.__initDeck) window.__initDeck(isReload);
+      try { addForm(cfg); } catch (e) {}
       return true;
     }).catch(function (e) {
       if (isReload) return false;
