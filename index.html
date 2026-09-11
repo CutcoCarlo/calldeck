@@ -445,10 +445,11 @@ footer .m{font-size:12px;color:var(--ink-3)}
 <footer>
 <button class="logbtn" id="addperson">Add a person</button>
 <div id="addwrap" class="addwrap" hidden>
-<p class="m"><b>Add a person from here.</b> Whatever you know now; research and the rest of the row come later. Pick what kind of call this is.</p>
+<p class="m"><b>Add a person from here.</b> A name is enough; whatever else you know now, and research and the rest of the row come later. Date, next step and notes can be changed on the card afterwards; name, number and email in the sheet. Pick what kind of call this is.</p>
 <div class="kindchips" id="ad-kinds"><button class="kc" data-kind="b" aria-pressed="true">Business</button><button class="kc" data-kind="r" aria-pressed="false">Residential</button><button class="kc" data-kind="abr" aria-pressed="false">ABR</button><button class="kc" data-kind="p" aria-pressed="false">Personal</button></div>
-<input id="ad-name" type="text" placeholder="Name" autocapitalize="words" autocorrect="off" aria-label="Name">
-<input id="ad-co" type="text" placeholder="Company" autocapitalize="words" autocorrect="off" aria-label="Company">
+<div class="dayrow"><button class="daybtn" id="ad-pick" hidden>Pick from Contacts</button></div>
+<input id="ad-name" type="text" placeholder="Name (the only must)" autocapitalize="words" autocorrect="off" aria-label="Name">
+<input id="ad-co" type="text" placeholder="Company (if you know it)" autocapitalize="words" autocorrect="off" aria-label="Company">
 <input id="ad-ph" type="tel" placeholder="Phone" aria-label="Phone">
 <input id="ad-em" type="email" placeholder="Email" autocapitalize="none" autocorrect="off" aria-label="Email">
 <input id="ad-city" type="text" placeholder="City" autocapitalize="words" aria-label="City">
@@ -3311,6 +3312,24 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       wrap.hidden = !wrap.hidden;
       if (!wrap.hidden) { reset(); paintKind(); $('ad-name').focus(); }
     });
+    /* iOS offers the phone's Contacts to a web page (Safari 14.5+, on a
+       tap): name, number and email land in the form without a copy-paste.
+       Shown only where the browser has it; nothing breaks where it does not. */
+    var pick = $('ad-pick');
+    if (pick) {
+      var can = !!(navigator.contacts && navigator.contacts.select);
+      pick.hidden = !can;
+      if (can) pick.addEventListener('click', function () {
+        navigator.contacts.select(['name', 'tel', 'email'], { multiple: false }).then(function (list) {
+          var c = list && list[0]; if (!c) return;
+          if (c.name && c.name.length) $('ad-name').value = String(c.name[0]);
+          if (c.tel && c.tel.length) $('ad-ph').value = String(c.tel[0]);
+          if (c.email && c.email.length) $('ad-em').value = String(c.email[0]);
+          $('ad-msg').textContent = 'From your contacts. Add the reason and save.';
+          $('ad-why').focus();
+        }).catch(function () { /* cancelled, or refused: the form is still there */ });
+      });
+    }
     $('ad-cancel').addEventListener('click', function () { wrap.hidden = true; });
     wrap.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('.kc') : null;
@@ -3321,8 +3340,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var v = function (id) { var el = $(id); return el ? String(el.value || '').trim() : ''; };
       var name = v('ad-name'), co = v('ad-co'), ph = v('ad-ph'), em = v('ad-em'), city = v('ad-city'), why = v('ad-why'), fu = v('ad-fu'), notes = v('ad-notes'), bought = v('ad-bought');
       var msg = $('ad-msg');
+      /* a name is the only thing required: a card can be called from with a
+         number found later, and the sheet fills in around it */
       if (!name) { msg.textContent = 'A name, at least.'; $('ad-name').focus(); return; }
-      if ((kind === 'b' || kind === 'abr') && !co) { msg.textContent = 'Which company?'; $('ad-co').focus(); return; }
       if (fu && fu < todayIso()) { msg.textContent = 'That date has passed.'; return; }
       var f = {};
       if (kind === 'p') {
