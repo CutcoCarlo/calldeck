@@ -3053,6 +3053,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         +(cm.start?'<p class="m">'+hesc(fmtDay(cm.start))+(cm.end?' to '+hesc(fmtDay(cm.end)):'')+'</p>':'')
         +'<div class="mk-stats"><span><b>'+n('queued')+'</b>to go</span><span><b>'+n('sent')+'</b>sent</span><span><b>'+n('replied')+'</b>replied</span><span><b>'+n('claimed')+'</b>claimed</span><span><b>'+n('excluded')+'</b>excluded</span><span><b>'+st+' / '+cap+'</b>today</span></div>';
       if(pu) h+='<p class="m"><b>Paused until '+hesc(fmtDay(pu))+'.</b> A Not Delivered means iMessage is watching; two days of quiet is the price of keeping it.</p><div class="mk-actions"><button class="daybtn" data-mkunpause="1">I was wrong, unpause</button></div>';
+      h+='<div class="mk-actions"><button class="daybtn" data-mkdel="1">'+(MKT.delArm===name?'Tap again to delete '+hesc(name):'Delete this campaign')+'</button></div>';
       h+='<details class="syncbox"><summary>Template</summary><textarea id="mk-tpl" aria-label="Template">'+hesc(cm.template||'')+'</textarea><p class="m">{hi} = greeting with their name, {one} = warm check-in, {bye} = sign-off, each drawn from a dozen lines in your voice. Edit and save; sends from now on use the new words.</p><div class="dayrow"><button class="daybtn primary" data-mktplsave="1">Save template</button><span id="mk-tplmsg"></span></div></details>';
       h+='</div>';
       /* the next one */
@@ -3102,11 +3103,22 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       +'<label class="mk-lbl">The VAST Action export (CSV)<input id="mk-file" type="file" accept=".csv,text/csv"></label>'
       +'<div id="mk-preview" class="mk-preview" hidden></div>'
       +'<div class="dayrow"><button class="daybtn primary" id="mk-save" disabled>Save campaign</button><span id="mk-msg"></span></div></div>';
+    /* the panel redraws itself (after a fetch, when a countdown ends); what
+       he has typed into the New list form must survive the redraw */
+    var keep={}; ['mk-name','mk-start','mk-end','mk-newtpl'].forEach(function(id){ var el=document.getElementById(id); if(el&&el.value) keep[id]=el.value; });
+    var focusId=document.activeElement&&document.activeElement.id;
     host.innerHTML=h;
+    Object.keys(keep).forEach(function(id){ var el=document.getElementById(id); if(el&&(id!=='mk-newtpl'||keep[id]!==MKT_DEFAULT_TPL)) el.value=keep[id]; });
+    if(mktParsed&&mktParsed.length){ var msg0=document.getElementById('mk-msg'), sv0=document.getElementById('mk-save'); if(msg0) msg0.textContent=mktParsed.length+' people, '+mktParsed.filter(function(c){ return c.ph; }).length+' with a number (file still loaded).'; if(sv0) sv0.disabled=false; }
+    if(focusId&&document.getElementById(focusId)){ try{ var fe=document.getElementById(focusId); fe.focus(); if(fe.setSelectionRange&&fe.value) fe.setSelectionRange(fe.value.length,fe.value.length); }catch(e){} }
     tplPreview();
-    if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){ if(!waitLeft(MKT.sel)){ clearInterval(mktTimer); mktTimer=null; renderMkt(); } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); var l=waitLeft(MKT.sel); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; } },1000);
+    if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){ if(!waitLeft(MKT.sel)){ if(typing()) return; clearInterval(mktTimer); mktTimer=null; renderMkt(); } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); var l=waitLeft(MKT.sel); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; } },1000);
   }
   window.__renderMkt=function(){ renderMkt(); mktFetch().then(function(okk){ if(okk) renderMkt(); }); };
+  /* a re-render while he is typing would also fire on every countdown tick;
+     the tick only updates the two numbers, and the full redraw waits until
+     no form field has focus */
+  function typing(){ var a=document.activeElement; return !!(a&&/^mk-(name|start|end|newtpl)$/.test(a.id||'')); }
 
   var mktParsed=null;
   /* a live preview under the template: the words as one real person would
@@ -3124,8 +3136,22 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
   document.addEventListener('input',function(e){ if(e.target&&e.target.id==='mk-newtpl') tplPreview(); });
   document.addEventListener('click',function(e){
-    var t=e.target.closest?e.target.closest('[data-mksel],[data-mkmark],[data-mkpause],[data-mkunpause],[data-mktplsave],#mk-save,[data-mktext]'):null;
+    var t=e.target.closest?e.target.closest('[data-mksel],[data-mkmark],[data-mkpause],[data-mkunpause],[data-mktplsave],#mk-save,[data-mktext],[data-mkdel]'):null;
     if(!t) return;
+    if(t.dataset.mkdel!==undefined){
+      /* two taps, no dialog: the first arms, the second deletes */
+      if(MKT.delArm!==MKT.sel){ MKT.delArm=MKT.sel; renderMkt(); setTimeout(function(){ if(MKT.delArm){ MKT.delArm=''; renderMkt(); } },6000); return; }
+      var gone=MKT.sel; MKT.delArm='';
+      mktPost({op:'delete',campaign:gone}).then(function(d){
+        if(!d||!d.ok){ banner('Could not delete: '+((d&&d.error)||'bridge')); return; }
+        MKT.campaigns=MKT.campaigns.filter(function(c){ return c.name!==gone||d.closed; });
+        if(!d.closed){ MKT.rows=MKT.rows.filter(function(r){ return r.c!==gone; }); delete MKT.local[gone]; MKT.sel=''; }
+        else MKT.rows.forEach(function(r){ if(r.c===gone&&r.st==='queued') r.st='skipped'; });
+        mktSave(); banner(d.closed?(gone+' closed: it had texts sent, so it stays in the log and its queue is cleared.'):('Deleted '+gone+'.'),true);
+        mktFetch().then(function(){ renderMkt(); });
+      }).catch(function(){ banner('Could not reach the bridge.'); });
+      return;
+    }
     if(t.dataset.mksel!==undefined){ MKT.sel=t.dataset.mksel; mktSave(); renderMkt(); return; }
     if(t.dataset.mktext!==undefined){ /* Messages opens; Sent is confirmed by hand */ return; }
     if(t.dataset.mkmark){
