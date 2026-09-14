@@ -2904,7 +2904,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   var MKT_CAPS=[25,40,60,75,100];          /* day 1, day 2, … never past the last */
   var MKT_HOURS=[9,18];
   var MKT_PAUSE_MIN=20, MKT_PAUSE_MAX=90;  /* seconds between contacts */
-  var MKT_DEFAULT_TPL="Hey {first}, it's Carlo with Cutco. {one} The Santa Cruz County Fair is this week and I'm doing something I've never done: a Golden Ticket for my best customers. Come by my booth, say hi, and I'll hand you a free piece of Cutco you can't buy anywhere, plus two entries in the raffle. Want your name on one? Reply YES and tell me which day you're thinking.";
+  /* the scaffold every new campaign starts from (Carlo, Sep 15): the
+     slots are already in place; he replaces one line with the reason */
+  var MKT_TPL_HOLE='TYPE YOUR MESSAGE HERE';
+  var MKT_DEFAULT_TPL="{hi}, it's Carlo with Cutco. {one} "+MKT_TPL_HOLE+" {bye}";
 
   /* ── CSV (VAST Action export) ── */
   function parseCsv(text){
@@ -2927,19 +2930,33 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return out;
   }
   /* the personal line: what makes this text unlike the last one */
-  /* Never a product code, never a sheath. A named knife when the row has
-     one; otherwise a line built from when they last bought; otherwise a
-     plain one. Numbers in a text read as a mail merge, which is the one
-     thing this line exists to avoid. */
+  /* ── the three slots that make each text its own ──────────────
+     Carlo, Sep 15: Items Owned does not mean he sold it, or that it was
+     the last thing they bought, so no product names in a campaign text.
+     Instead three pools in his voice: a greeting, a warm check-in, a
+     sign-off. The pick is seeded by the phone number, so one person always
+     gets the same words (a re-open never changes a text under him) and a
+     hundred people get a hundred combinations, which is what iMessage
+     needs to see. A check-in that uses a fact (the year they last bought,
+     the town) is used only when the fact is recent enough to be true of
+     him. */
+  /* the greeting never says who it is; the template does that once */
+  var HI=['Hi {first}','Hey {first}','Hello {first}','{first}, hi','Quick one, {first}','Howdy {first}','Hey there {first}','{first}, quick message','Hi there {first}','Hey {first}, quick one','Hello there {first}','{first}, hey'];
+  var CHECK=['Hope you and the family are doing well.','Hope the year is treating you well.','Hope everything is good in your kitchen.','Hope all your Cutco is still doing its job.','Hope life is treating you well.','Hope things are good on your end.','Hope the knives are still pulling their weight.','Hope you are having a good week.','Hope the family is well and the knives are sharp.','Hope all is well with you.','Hope everything is good with you and yours.','Hope summer treated you well.'];
+  var CHECK_YEAR=['Hope everything you picked up in {yr} is still treating you well.','Hope the pieces from {yr} are still earning their keep.','It has been a while since {yr}; hope all is well.'];
+  var CHECK_CITY=['Hope things are good over in {city}.','Hope all is well in {city}.'];
+  var BYE=['Stay sharp.','Have a knife day.','Hope to see you soon.','Let me know how I can help.','Have a great day.','You are awesome.','Talk soon.','See you at the fair.','Appreciate you.','Hope to catch you there.','Thanks as always.','Be well.'];
+  function seedOf(c){ var d=String(c.ph||'').replace(/\D/g,''); return d?Number(d.slice(-4)):((c.first||'').length*7+(c.last||'').length*13); }
+  function pick(list,seed,k){ return list[(seed*31+k*17)%list.length]; }
   function oneLine(c){
-    var names=itemNames(c.items), yr=Number((String(c.lastOrder||'').match(/(\d{4})/)||[])[1])||0;
-    var pick=names.filter(function(n){ return /^[A-Za-z][A-Za-z'" .&-]+$/.test(n) && !/Set|Board|Engrav|Sheath|Sleeve|Wrap|Gift|Card|Letter|Block|Tray|Case|Replacement/i.test(n); });
-    if(pick.length){ var n=pick[Math.floor((c.ph?Number(c.ph.slice(-2)):0)%pick.length)]; var pl=/s$/i.test(n)&&!/ss$/i.test(n); return 'Hope the '+n+(pl?' are':' is')+' still earning '+(pl?'their':'its')+' keep.'; }
-    var now=new Date().getFullYear();
-    if(yr&&yr>=now-1) return 'Hope everything you picked up last year is treating you well.';
-    if(yr) return 'Hope everything you got from me back in '+yr+' is still treating you well.';
-    return 'Hope you and the family are doing well.';
+    var seed=seedOf(c), yr=Number((String(c.lastOrder||'').match(/(\d{4})/)||[])[1])||0, now=new Date().getFullYear();
+    var r=(seed+c.orders)%10;
+    if(yr&&yr>=now-3&&r<3) return pick(CHECK_YEAR,seed,2).replace('{yr}',String(yr));
+    if(c.city&&r>=3&&r<5) return pick(CHECK_CITY,seed,3).replace('{city}',c.city);
+    return pick(CHECK,seed,1);
   }
+  function hiFor(c){ return pick(HI,seedOf(c),4).replace('{first}',c.first||'there'); }
+  function byeFor(c){ return pick(BYE,seedOf(c),5); }
   function fromVast(rows){
     var head=rows[0].map(function(h){ return String(h).trim().toLowerCase(); });
     var ix=function(n){ return head.indexOf(n.toLowerCase()); };
@@ -2962,7 +2979,10 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     return out;
   }
   function fill(tpl,c){
-    return String(tpl||'').replace(/\{first\}/g,c.first||'there').replace(/\{one\}/g,c.line||'').replace(/\{city\}/g,c.city||'').replace(/\s{2,}/g,' ').trim();
+    var one=c.line||oneLine(c);
+    /* {hi} carries the name; a template that opens "{hi}, {one}" reads
+       "Hey Laurie, hope the family is well." */
+    return String(tpl||'').replace(/\{hi\}/g,hiFor(c)).replace(/\{first\}/g,c.first||'there').replace(/\{one\}/g,one).replace(/\{bye\}/g,byeFor(c)).replace(/\{city\}/g,c.city||'').replace(/\s{2,}/g,' ').trim();
   }
 
   /* ── bridge ── */
@@ -3033,7 +3053,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         +(cm.start?'<p class="m">'+hesc(fmtDay(cm.start))+(cm.end?' to '+hesc(fmtDay(cm.end)):'')+'</p>':'')
         +'<div class="mk-stats"><span><b>'+n('queued')+'</b>to go</span><span><b>'+n('sent')+'</b>sent</span><span><b>'+n('replied')+'</b>replied</span><span><b>'+n('claimed')+'</b>claimed</span><span><b>'+n('excluded')+'</b>excluded</span><span><b>'+st+' / '+cap+'</b>today</span></div>';
       if(pu) h+='<p class="m"><b>Paused until '+hesc(fmtDay(pu))+'.</b> A Not Delivered means iMessage is watching; two days of quiet is the price of keeping it.</p><div class="mk-actions"><button class="daybtn" data-mkunpause="1">I was wrong, unpause</button></div>';
-      h+='<details class="syncbox"><summary>Template</summary><textarea id="mk-tpl" aria-label="Template">'+hesc(cm.template||'')+'</textarea><p class="m">{first} is the first name, {one} the personal line the deck writes from their row. Edit and save; sends from now on use the new words.</p><div class="dayrow"><button class="daybtn primary" data-mktplsave="1">Save template</button><span id="mk-tplmsg"></span></div></details>';
+      h+='<details class="syncbox"><summary>Template</summary><textarea id="mk-tpl" aria-label="Template">'+hesc(cm.template||'')+'</textarea><p class="m">{hi} = greeting with their name, {one} = warm check-in, {bye} = sign-off, each drawn from a dozen lines in your voice. Edit and save; sends from now on use the new words.</p><div class="dayrow"><button class="daybtn primary" data-mktplsave="1">Save template</button><span id="mk-tplmsg"></span></div></details>';
       h+='</div>';
       /* the next one */
       var row=pu?null:nextRow(name);
@@ -3077,16 +3097,32 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       +'<label class="mk-lbl">Campaign name<input id="mk-name" type="text" placeholder="Santa Cruz County Fair 2026" autocapitalize="words"></label>'
       +'<label class="mk-lbl">Event start date<input id="mk-start" type="date" aria-label="Event start"></label>'
       +'<label class="mk-lbl">Event end date<input id="mk-end" type="date" aria-label="Event end"></label>'
-      +'<label class="mk-lbl">Template ({first} = first name, {one} = the personal line the deck writes)<textarea id="mk-newtpl">'+hesc(MKT_DEFAULT_TPL)+'</textarea></label>'
+      +'<label class="mk-lbl">Template ({hi} = a greeting with their name, {one} = a warm check-in, {bye} = a sign-off; each drawn from a dozen of your lines so no two texts match)<textarea id="mk-newtpl">'+hesc(MKT_DEFAULT_TPL)+'</textarea></label>'
+      +'<div class="mk-preview" id="mk-tplpv"></div>'
       +'<label class="mk-lbl">The VAST Action export (CSV)<input id="mk-file" type="file" accept=".csv,text/csv"></label>'
       +'<div id="mk-preview" class="mk-preview" hidden></div>'
       +'<div class="dayrow"><button class="daybtn primary" id="mk-save" disabled>Save campaign</button><span id="mk-msg"></span></div></div>';
     host.innerHTML=h;
+    tplPreview();
     if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){ if(!waitLeft(MKT.sel)){ clearInterval(mktTimer); mktTimer=null; renderMkt(); } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); var l=waitLeft(MKT.sel); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; } },1000);
   }
   window.__renderMkt=function(){ renderMkt(); mktFetch().then(function(okk){ if(okk) renderMkt(); }); };
 
   var mktParsed=null;
+  /* a live preview under the template: the words as one real person would
+     get them, so a missing {hi} or a typo shows before anything is saved */
+  function tplPreview(){
+    var ta=document.getElementById('mk-newtpl'), pv=document.getElementById('mk-tplpv'); if(!ta||!pv) return;
+    var tpl=ta.value||'';
+    var c=(mktParsed&&mktParsed[0])||{first:'Laurie',last:'Hunkel',ph:'8315550101',city:'Watsonville',lastOrder:'01/24/2024',orders:5,life:5590};
+    if(!c.line) c.line=oneLine(c);
+    var missing=['{hi}','{one}','{bye}'].filter(function(k){ return tpl.indexOf(k)<0; });
+    pv.hidden=false;
+    pv.innerHTML='<div class="dim">How it reads for '+hesc(c.first)+' (every person gets their own greeting, check-in and sign-off):</div><div>'+hesc(fill(tpl,c))+'</div>'
+      +(tpl.indexOf(MKT_TPL_HOLE)>-1?'<div class="warn" style="color:#8f2f2f">Replace '+MKT_TPL_HOLE+' with the reason for the text before saving.</div>':'')
+      +(missing.length?'<div class="warn" style="color:#8f2f2f">Not used: '+hesc(missing.join(' '))+'. Without {hi} every text opens the same way; without {one} and {bye} they end the same way. Put them back unless you mean it.</div>':'');
+  }
+  document.addEventListener('input',function(e){ if(e.target&&e.target.id==='mk-newtpl') tplPreview(); });
   document.addEventListener('click',function(e){
     var t=e.target.closest?e.target.closest('[data-mksel],[data-mkmark],[data-mkpause],[data-mkunpause],[data-mktplsave],#mk-save,[data-mktext]'):null;
     if(!t) return;
@@ -3116,7 +3152,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var ntpl=String(document.getElementById('mk-newtpl').value||'').trim();
       if(!name){ msg.textContent='Name the campaign.'; return; }
       if(!mktParsed||!mktParsed.length){ msg.textContent='Pick the CSV first.'; return; }
-      if(ntpl.indexOf('{first}')<0){ msg.textContent='The template needs {first}.'; return; }
+      if(ntpl.indexOf('{first}')<0&&ntpl.indexOf('{hi}')<0){ msg.textContent='The template needs {hi} or {first}.'; return; }
+      if(ntpl.indexOf(MKT_TPL_HOLE)>-1){ msg.textContent='Replace '+MKT_TPL_HOLE+' with the reason for the text.'; return; }
       t.disabled=true; msg.textContent='Saving '+mktParsed.length+'…';
       mktPost({op:'save',campaign:{name:name,template:ntpl,cap:MKT_CAPS[0],start:document.getElementById('mk-start').value||'',end:document.getElementById('mk-end').value||'',contacts:mktParsed}})
         .then(function(d){
@@ -3135,11 +3172,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var rows=parseCsv(rd.result); var list=rows.length>1?fromVast(rows):null;
       var pv=document.getElementById('mk-preview'), sv=document.getElementById('mk-save'), msg=document.getElementById('mk-msg');
       if(!list){ pv.hidden=true; sv.disabled=true; msg.textContent='That does not look like a VAST export (no First Name column).'; mktParsed=null; return; }
+      /* the check-in is stored on the row so the same words come back after a refresh */
       mktParsed=list;
       var withPh=list.filter(function(c){ return c.ph; }).length;
       msg.textContent=list.length+' people, '+withPh+' with a number.';
-      pv.hidden=false; pv.innerHTML=list.slice(0,12).map(function(c){ return '<div><b>'+hesc(c.first+' '+c.last)+'</b> · '+hesc(c.city)+' · '+hesc(c.line)+'</div>'; }).join('')+(list.length>12?'<div>… and '+(list.length-12)+' more</div>':'');
+      pv.hidden=false; pv.innerHTML='<div class="dim">File order, not texting order: the bridge ranks the list when you save (business first, then the buying habit).</div>'+list.slice(0,12).map(function(c){ return '<div><b>'+hesc(c.first+' '+c.last)+'</b> · '+hesc(c.city)+' · '+hesc(hiFor(c)+', '+c.line+' … '+byeFor(c))+'</div>'; }).join('')+(list.length>12?'<div>… and '+(list.length-12)+' more</div>':'');
       sv.disabled=!withPh;
+      tplPreview();
     };
     rd.readAsText(f);
   });
