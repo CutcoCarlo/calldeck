@@ -340,6 +340,30 @@ footer .m{font-size:12px;color:var(--ink-3)}
 .kc{font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-3)}
 .kc[aria-pressed="true"]{border-color:var(--brass);color:var(--brass)}
 .card.k-pers .spine{background:#7a8b99}
+/* the marketing panel */
+#mkt{display:flex;flex-direction:column;gap:18px}
+.mk-card{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 14px 12px}
+.mk-card h3{margin:0 0 4px;font-size:16px}
+.mk-card .m{margin:4px 0 0}
+.mk-stats{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 2px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
+.mk-stats b{color:var(--ink);font-size:15px;display:block}
+.mk-card input,.mk-card textarea{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink);font:inherit;font-size:14px}
+.mk-card textarea{min-height:120px}
+.mk-card input[type=file]{padding:6px 0;border:0;background:none}
+.mk-next{border:2px solid var(--brass);border-radius:12px;padding:14px;background:var(--surface)}
+.mk-next .who{font-size:18px;font-weight:700}
+.mk-next .why{color:var(--ink-3);font-size:12.5px;margin:2px 0 8px}
+.mk-next .msg{white-space:pre-wrap;font-size:15px;line-height:1.45;padding:10px 12px;border-radius:8px;background:var(--ground);border:1px solid var(--line)}
+.mk-next .warn{color:#8f2f2f;font-size:12.5px;margin-top:6px}
+.mk-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.mk-actions .tel{flex:1 1 100%;display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:10px;background:var(--brass);color:#fff;text-decoration:none;font-weight:700;font-size:16px}
+.mk-actions .tel.off{background:var(--line);color:var(--ink-3);pointer-events:none}
+.mk-wait{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.mk-log{font-size:12.5px;color:var(--ink-3)}
+.mk-log div{padding:4px 0;border-bottom:1px solid var(--line)}
+.mk-paused{border-color:#8f2f2f;background:#fff4f4}
+.mk-preview{max-height:220px;overflow:auto;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;background:var(--ground)}
+.mk-preview div{padding:3px 0;border-bottom:1px solid var(--line)}
 .tag.line{border-color:var(--brass);color:var(--brass)}
 .pdraft{margin-top:4px;font-size:12.5px}
 .pdraft summary{cursor:pointer;color:var(--ink-3);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
@@ -413,6 +437,10 @@ footer .m{font-size:12px;color:var(--ink-3)}
 <div class="wrap">
 <div class="panel" data-p="plan" data-nocard="1" hidden>
 <div id="planbrief"></div>
+</div>
+
+<div class="panel" data-p="marketing" data-nocard="1" hidden>
+<div id="mkt"></div>
 </div>
 
 <div class="panel" id="deckpanel" data-p="_none">
@@ -858,6 +886,8 @@ window.__GEO={REGION:REGION,DRIVE:DRIVE,driveAllow:driveAllow,homeMiles:homeMile
 })();
 </script>
 <script>
+window.__ITEMS={"2018C":"\u2022   C/W/R    Homemaker + 8 Set with Block w/ Petite Chef","1818C":"\u2022   C/W      Homemaker + 8 Set with Block w/ French Chef","2001C":"\u2022   C/W/R    Homemaker Set with Block w/ Petite Chef","1801C":"\u2022   C/W      Homemaker Set with Block w/ French Chef","2000C":"Homemaker Set with Trays w/ Petite Chef","1800C":"Homemaker Set with Trays w/ French Chef","2008C":"\u2022   C/W/R    Galley + 6 Set with Block","2007C":"\u2022   C/W/R    Galley Set with Block","1945C":"Essentials + 5 Set with Block","1845C":"Essentials Set with Block","1810C":"Studio + 4 Set with Block","1809C":"Studio Set with Block","1847C":"Space Saver Set with Block","2085C":"All Knife Set with Tray","1783C":"Kitchenette Set with Tray","1805C":"Gourmet Set with Block","1813C":"\u2022   C/W      Ultimate Set with Block (w/ Table Knives)","6813C":"\u2022   C/W      Ultimate Set with Steak Knives with Block","1814C":"\u2022   C/W/R    Signature Set with Block (w/ Table Knives)","6814C":"\u2022   C/W/R    Signature Set with Steak Knives with Block","2014C":"\u2022   C/W      Santoku-Style Signature Set with Block (w/ Table Knives)","6014C":"\u2022 C/W        Santoku-Style Signature Set with Steak Knives with Block","1720":"2-3/4\" Paring Knife","1721":"Trimmer","1768":"Spatula Spreader","1729":"6-3/4\" Petite Carver","1726":"Turning Fork","1722":"Butcher Knife","1728":"7-5/8\" Petite Chef","1724":"9-3/4\" Slicer","1723":"9\" Carver","1727":"Carving Fork","1759":"Table Knife","1813CB":"\u2022 C/W/R     Ultimate Set with Block *","1814CB":"\u2022 C/W       Signature Set with Block *","2014CB":"\u2022 C/W/R     Santoku-Style Signature Set with Block *","1801CB":"\u2022 C/W       Homemaker Set with 1748 Block w/ French Chef *","2001CB":"\u2022 C/W/R     Homemaker Set with 1748 Block w/ Petite Chef *","2007CB":"\u2022 C/W       Galley Set with 1744 Block","1845CB":"Essentials Set with 1651 Block","1809CB":"Studio Set with 1751 Block","4820C":"\u2022 C/W/R     Galley + 6 Table Knives with Ultimate Block Upgrade","4821C":"\u2022 C/W/R     Galley + 6 Steak Knives with Ultimate Block Upgrade","4822C":"\u2022 C/W/R     Galley + 6 Table Knives with Signature Block Upgrade","4823C":"\u2022 C/W/R     Galley + 6 Steak Knives with Signature Block Upgrade","4824C":"\u2022 C/W/R     Galley + 6 Table Knives with Homemaker Block Upgrade","4826C":"\u2022 C/W/R     Homemaker + 8 Table Knives with Ultimate Block Upgrade","4827C":"\u2022 C/W/R     Homemaker + 8 Steak Knives with Ultimate Block Upgrade","4828C":"\u2022 C/W/R     Homemaker + 8 Table Knives with Signature Block Upgrade","4829C":"\u2022 C/W/R     Homemaker + 8 Steak Knives with Signature Block Upgrade","4830C":"\u2022 C/W/R     Signature + 10 Table Knives with Ultimate Block Upgrade","4831C":"\u2022 C/W/R     Signature + 10 Steak Knives with Ultimate Block Upgrade","1504":"Cheese Knife (Soft Grip)","1503":"Ice Cream Scoop","1502":"Pizza Cutter","1501":"Vegetable Peeler","1507":"Wine Opener","1506":"Can Opener","1865":"4-Pc. Table Knife Set","2065":"4-Pc. Steak Knife Set","1864":"4-Pc. Table Knife Set with Tray","1982":"4-Pc. Stainless Table Knife Set","1869":"6-Pc. Table Knife Set","1987":"6-Pc. Stainless Table Knife Set","1860":"6-Pc. Table Knife Set with Block","1866":"8-Pc. Table Knife Set","1983":"8-Pc. Stainless Table Knife Set","1863":"8-Pc. Table Knife Set with Block","1867":"12-Pc. Table Knife Set","1988":"12-Pc. Stainless Table Knife Set","3738":"Hardy Slicer","1766":"7\" Santoku","2166":"5\" Petite Santoku","1737":"Cleaver With Sheath","1735":"7-1/2\" Vegetable Knife","2135":"6\" Vegetable Knife","4135":"4\" Vegetable Knife","1738":"Gourmet Prep Knife","1725":"9-1/4\" French Chef","1762":"Salmon Knife","2124":"7-3/4\" Petite Slicer","1761":"Boning Knife","2159":"Steak Knife","2120":"4\" Paring Knife","3120":"2-3/4\" Bird\u2019s Beak Paring Knife","3724":"Santoku-Style 10\" Slicer","3729":"Santoku-Style 8\" Carver","3721":"Santoku-Style Trimmer","3720":"Santoku-Style 3\" Paring Knife","1764":"Traditional Cheese Knife","2164":"Mini Cheese Knife","3764":"Santoku-Style Cheese Knife","4120":"3\" Gourmet Paring Knife","4720":"4\" Gourmet Paring Knife","2031":"3-Pc. Knife & Sheath Set","2033":"4-Pc. Knife & Sheath Set","2035":"5-Pc. Knife & Sheath Set","77":"Super Shears","79":"Shears Holster","124":"Small Cutting Board","125":"Medium Cutting Board","125R":"Red Medium Cutting Board","126":"Large Cutting Board","1904":"4-Pc. Cutlery Care Set","1905":"3-Pc. Cutting Board Set","84":"Knife Sharpener","1754":"Slice n\u2019 Serve","1754LH":"Slice n\u2019 Serve Left-Handers","1755":"Turn n\u2019 Serve","1756":"Professional Spatula","1709":"\u2013         Barbecue Set (Classic only)","1719":"5-Pc. Kitchen Tool Set (Tools Only)","1793":"6-Pc. Kitchen Tool Set (Tools Only)","1712":"Basting Spoon","1715":"Ladle","1714":"Mix-Stir","1713":"Slotted Spoon","1716":"Slotted Turner","1160":"Potato Masher","1946":"4-Pc. Stainless Place Setting","1947":"5-Pc. Stainless Place Setting with Stainless Table Knife","1984":"60-Pc. Stainless Flatware Set in FREE Chest (12 Place Settings)**","1972":"3-Pc. Stainless Serving Set*","1971":"3-Pc. Stainless Hostess Set*","1970":"6-Pc. Stainless Accessory Set","1959":"Stainless Table Knife","331":"5-Pc. Garden Tool Set w/FREE Garden Bag","332":"4-Pc. Garden Tool Set with Bypass Pruners","326":"4-Pc. Garden Tool Set with Transplanting Trowel","328":"3-Pc. Garden Tool Set","300":"Cultivator","304":"Garden Trowel","302":"Transplanting Trowel","301":"Weeder","1527":"Bypass Pruners","5726":"BK       CUTCO\u00ae/KA-BAR\u00ae Outdoorsman                               S      N/A","1890BK":"BK       Golf Mate                                                S      N/A","1886BK":"BK, DB   Pocket Knife                                             S      DD","1769":"Hunting Knife                                            DD     S","5718BK":"BK, H    Drop Point Hunting Knife                                 DD     S","5718GC":"GC, PC   Camo Drop Point Hunting Knife                            DD     S","5719BK":"BK, H    Clip Point Outdoor Knife                                 DD     S","5719GC":"GC, PC   Camo Clip Point Outdoor Knife                            DD     S","5717BK":"BK, H    Gut Hook Hunting Knife                                   DD     S","5717GC":"GC, PC   Camo Gut Hook Hunting Knife                              DD     S","5721BK":"BK, H     Fisherman\u2019s Solution\u00ae                                   S      N/A","5721GC":"GC, PC    Camo Fisherman\u2019s Solution\u00ae                              S      N/A","1720SH":"2-3/4\" Paring Knife with Sheath","2120SH":"4\" Paring Knife with Sheath","1721SH":"Trimmer with Sheath","3721SH":"Santoku-Style Trimmer with Sheath","2159SH":"Steak Knife with Sheath","1759SH":"Table Knife with Sheath","1768SH":"Spatula Spreader with Sheath","1764SH":"Traditional Cheese Knife with Sheath","2166SH":"5\" Petite Santoku with Sheath","1729SH":"6-3/4\" Petite Carver with Sheath","1723SH":"9\" Carver with Sheath","1724SH":"9-3/4\" Slicer with Sheath","2124SH":"7-3/4\" Petite Slicer with Sheath","1762SH":"Salmon Knife with Sheath","1728SH":"7-5/8\" Petite Chef with Sheath","1725SH":"9-1/4\" French Chef with Sheath","1766SH":"7\" Santoku with Sheath","3738SH":"Hardy Slicer with Sheath","1738SH":"Gourmet Prep Knife with Sheath","4135SH":"4\" Vegetable Knife with Sheath","2135SH":"6\" Vegetable Knife with Sheath","1735SH":"7-1/2\" Vegetable Knife with Sheath","1854":"Bake n\u2019 Serve Set (regular Gift Box)","1854LH":"Bake n\u2019 Serve Set for Left-Handers (regular Gift Box)","1844CD":"Carver\u2019s Choice Set","1834CD":"Carving Set","1858CD":"Cheese Knife Combo","1822CD":"Club Mates","1853CD":"Cook\u2019s Combo","1849CD":"Culinary Companions","1821CD":"Deli Mates","1855CD":"Dessert Favorites","1838":"\u2013         Entertainer Pack (regular Gift Box)","1827CD":"Kitchen Classics","1837CD":"Party Favorites","1837CDLH":"Party Favorites for Left-Handers","1829CD":"\u2013         Party Pack","1842CD":"Party Starters","1828CD":"Peel n\u2019 Pare Pack","3849CD":"Petite Culinary Companions","3828CD":"Petite Prep Set","3836CD":"Petite Santoku-Style Cook\u2019s Combo","2060CD":"Prep & Party Set","1820CD":"Salad Mates","1859CD":"Santoku Classics","1850CD":"2-Pc Santoku Set","3822CD":"Santoku-Style Club Mates","1836CD":"Santoku-Style Cook\u2019s Combo","3852CD":"Santoku-Style Shear Utility Set","3908CD":"Shear Entertainer Set","1851CD":"Shear Favorites","3909CD":"Shear Prep Set","1852CD":"Shear Utility Set","1831":"Snack Pack (regular Gift Box)","3827CD":"Time Saver Set","3826CD":"Welcome Home Set","2130CD":"Wine & Cheese Set","6761CD":"Boning Knife","6138CD":"Gourmet Prep Knife","6738CD":"Hardy Slicer","6729CD":"6-3/4\" Petite Carver","6728CD":"7-5/8\" Petite Chef","6166CD":"5\" Petite Santoku","6124CD":"7-3/4\" Petite Slicer","6766CD":"7\" Santoku","6721CD":"Santoku-Style Trimmer","6754CD":"Slice n\u2019 Serve","6754CDLH":"Slice n\u2019 Serve for Left-Handers","6768CD":"Spatula Spreader","6159CD":"Steak Knife","677CD":"Super Shears","6764CD":"Traditional Cheese Knife","6121CD":"Trimmer","6755CD":"Turn n\u2019 Serve","6135CD":"6\" Vegetable Knife","6735CD":"7-1/2\" Vegetable Knife","1747":"\u2022           Ultimate Set Block (32-Slot)","1652":"\u2022           Signature Set Block (24-Slot)","1748":"\u2022           Homemaker + 8 Set Block (18-Slot)","1741":"\u2022           Homemaker Set Block (10-Slot)","1744":"\u2022           Galley + 6 Set Block (13-Slot)","1743":"\u2022           Galley Set Block (7-Slot)","1651":"Essentials + 5 Set Block (10-Slot)","1649":"Essentials Set Block (5-Slot)","1751":"Studio + 4 Set Block (8-Slot)","1740":"Studio Set Block (4-Slot)","1746":"Space Saver Set Block (5-Slot)","1749":"Gourmet Set Block (5-Slot)","1752":"Table Knife Set Block (6-Slot)","1753":"Table Knife Set Block (8-Slot)","1711":"\u2022           Kitchen Tool Holder","1742":"5-Pc Knife & Fork Tray","1745":"4-Pc Table Knife Tray","1720-2":"2-3/4\" Paring Knife Sheath","2120-2":"4\" Paring Knife Sheath","1721-2":"Trimmer Sheath","3721-2":"Santoku-Style Trimmer Sheath","2159-2":"Steak Knife Sheath","1759-2":"Table Knife Sheath","1768-2":"Spatula Spreader Sheath","1764-2":"Traditional Cheese Knife Sheath","4135-2":"4\" Vegetable Knife Sheath","2166-2":"5\" Petite Santoku Sheath","1729-2":"6-3/4\" Petite Carver Sheath","1723-2":"9\" Carver Sheath","1724-2":"7-3/4\" Petite Slicer/9-3/4\" Slicer/Salmon Knife Sheath","1728-2":"7-5/8\" Petite Chef Sheath","1725-2":"9-1/4\" French Chef Sheath","1766-2":"7\" Santoku Sheath","3738-2":"Hardy Slicer/Gourmet Prep Knife Sheath","2135-2":"6\" Vegetable Knife Sheath","1735-2":"7-1/2\" Vegetable Knife Sheath","1737-2":"Cleaver Sheath","9922C":"Accomplished Chef Cookware Set*","9918C":"Dedicated Chef Cookware Set*","9901":"Aspiring Chef Cookware Set","1161":"Food Press","277":"12 oz. Bar Keepers Friend\u00ae Cleanser","278":"Handle Mitt","287":"Cooking Guide","938":"8\" Gourmet Fry Pan","930":"10\" Gourmet Fry Pan","932":"12\" Gourmet Fry Pan","931":"Griddle","936":"10 Qt. Stock Pot & Cover","939":"Wok & Cover","991":"1 Qt. Sauce Pan & Cover","992":"2 Qt. Sauce Pan & Cover","993":"3 Qt. Sauce Pan & Cover","998":"9\" Utility Pan & Cover","990":"11-1/2\" Skillet & Cover","990P":"11-1/2\" Skillet","990C":"Cover \u2013 6.3 Qt. Dutch Oven / Skillet","994":"4 Qt. Dutch Oven & Cover","995":"6.3 Qt. Dutch Oven Bottom","996":"High Dome Cover \u2013 6.3 Qt. Dutch Oven / Skillet","997":"Steamer Insert (fits 3 Qt.)","999":"Double Boiler Insert (fits 3 Qt.)","860":"3-Piece Nonstick Fry Pan Set","858":"8\" Nonstick Fry Pan","850":"10\" Nonstick Fry Pan","852":"12\" Nonstick Fry Pan","FLITZ50":"Flitz Polish","1502-1":"Blade for Pizza Cutter*","1706":"Barbecue Fork*","1707":"Barbecue Turner*","1708":"Barbecue Tongs*","1737-1":"Cleaver Only","1769-2":"Hunting Knife Repacement Sheath","5717-2":"Replacement Sheath for 5717, 5718 & 5719","5726-2":"CUTCO\u00ae/KA-BAR\u00ae Outdoorsman Replacement Sheath","5725-2":"CUTCO\u00ae/KA-BAR\u00ae Explorer Replacement Sheath","5720-2":"Fisherman's Solution\u00ae Replacement Sheath","5720B":"Fisherman's Solution\u00ae Blade Only*","1950":"Stainless Dinner Fork","1951":"Stainless Teaspoon","1952":"Stainless Salad Fork","1953":"Stainless Soup Spoon","1960":"Stainless Serving Spoon","1961":"Stainless Slotted Serving Spoon","1962":"Stainless Serving Fork","1963":"Stainless Gravy Ladle","1964":"Stainless Sugar Spoon","1965":"Stainless Butter Knife","1530P":"1-1/2\" \u00d7 3\" Brass Plate with adhesive tape","1537S":"1-1/2\" \u00d7 3\" Silver Plate with adhesive tape","1536PH":"2\" \u00d7 3\" Brass Plate with holes","1536PT":"2\" \u00d7 3\" Brass Plate with adhesive tape","1536SH":"2\" \u00d7 3\" Silver Plate with holes","1536ST":"2\" \u00d7 3\" Silver Plate with adhesive tape","1700":"For 4 Table Knives (1865)","2204":"For 4 Stainless Table Knives (1982)","1701":"For 8 Table Knives (1866)","2208":"For 8 Stainless Table Knives (1983)","1702":"For 12 Table Knives (1867)","2202":"For 12 Stainless Table Knives (1988)","2102":"For 6 Table Knives (1869)","2206":"For 6 Stainless Table Knives (1987)","1703":"For Snack Pack (1831)","2028":"For 4-Pc. Steak Knife Set (2065)","2109":"For Entertainer Pack (1838)","1704D":"For Carving Set (1834xD)","2027D":"For Wine & Cheese Set (2130xD)","2106D":"For Peel n' Pare Pack (1828xD)","2107D":"For Party Pack (1829CD)","2108D":"For Party Favorites/Dessert Favorites (1837xD/1837xDLH/1855xD)","2111D":"For Kitchen Classics/Santoku Classics (1827xD/1859xD)","2114D":"For Party Starters/Cheese Knife Combo (1842xD/1858xD)","2115D":"SS Cook's Combo (1853xD/1844xD/1849xD/1836xD)","2116D":"For 2-Pc. Santoku Set (1850xD)","2117D":"Entertainer Set/Shear Prep Set (1851xD/1852xD/3852xD/3908xD/3909xD)","2119D":"(1822xD/3849xD/3828xD/3836xD/3822xD/3827xD/3826xD)"};</script>
+<script>
 
 window.__initDeck=function(){
   var KEY='cc-calldeck-v1', TKEY='cc-calldeck-day', NKEY='cc-calldeck-next', SKEY='cc-deck-sync',
@@ -1020,6 +1050,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     var at = 0; TABS.forEach(function (t, i) { if (t.id === 'today') at = i + 1; });
     TABS.splice(at, 0, { id: 'personal', title: 'Personal', q: { kind: 'p', sort: 'fu', geo: false, homeDistance: false } });
   }
+  /* the Marketing tab: the campaign text tool, always there, after Personal/Today */
+  if (!TABS.some(function (t) { return t.id === 'marketing'; })) {
+    var atM = 0; TABS.forEach(function (t, i) { if (t.id === 'today' || t.id === 'personal') atM = i + 1; });
+    TABS.splice(atM, 0, { id: 'marketing', title: 'Marketing', kind: 'campaign' });
+  }
   /* and every other list ignores them: a personal call is never a pipeline row */
   TABS.forEach(function (t) { if (t.q && !t.q.kind && t.id !== 'today') t.q.kindNot = 'p'; });
   var TABBY = {}; TABS.forEach(function (t) { TABBY[t.id] = t; });
@@ -1045,7 +1080,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       bar.innerHTML = TABS.map(function (t, i) {
         return '<button class="tab" role="tab" aria-selected="' + (i === 0 ? 'true' : 'false') +
                '" data-p="' + t.id + '">' + t.title +
-               (t.kind === 'plan' ? '' : '<span class="n" data-n="' + t.id + '">0</span>') +
+               ((t.kind === 'plan' || t.kind === 'campaign') ? '' : '<span class="n" data-n="' + t.id + '">0</span>') +
                '</button>';
       }).join('');
     }
@@ -2424,14 +2459,18 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 
   function setTab(name){
     var tab=TABBY[name]||null;
-    var isPlan = tab && tab.kind==='plan';
+    var isMkt = tab && tab.kind==='campaign';
+    var isPlan = (tab && tab.kind==='plan') || isMkt;   /* a prose panel, not the deck */
     [].forEach.call(document.querySelectorAll('.tab'),function(x){
       x.setAttribute('aria-selected', x.dataset.p===name?'true':'false');
     });
     var deck=document.getElementById('deckpanel');
     if(deck) deck.dataset.p = (tab && !isPlan) ? name : '_none';
-    var pp=document.querySelector('.panel[data-p="plan"]');
-    if(pp) pp.dataset.p = isPlan ? name : 'plan';
+    var pp=document.querySelector('.panel[data-p="plan"], .panel[data-p="'+name+'"][data-nocard]');
+    var mp=document.getElementById('mkt') && document.getElementById('mkt').parentNode;
+    if(pp && !isMkt) pp.dataset.p = isPlan ? name : 'plan';
+    if(mp) mp.dataset.p = isMkt ? name : 'marketing';
+    if(isMkt && window.__renderMkt) window.__renderMkt();
 
     /* Carlo asked for sync settings and the day code at the bottom of the
        Today tab, not off in a Setup tab of their own. They also appear when
@@ -2839,6 +2878,260 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     });
     if(changed) save();
   })();
+
+  /* ═══════════════════════════════════════════════════════════════
+     MARKETING — the Golden Ticket text tool (Sep 14).
+     A VAST Action export becomes a campaign: a list, a template with
+     {first} and {one}, and a queue the deck walks one tap at a time inside
+     the rules that keep iMessage safe (Carlo lost it once, on Reach):
+       - every message is sent by his thumb; the deck only opens Messages
+       - no two bodies alike: {one} comes from the row
+       - a daily cap, 25 to start, never past 100; business hours only
+       - a random 20–90 s pause between contacts, no fixed cadence
+       - Pause locks the campaign 48 h the moment a Not Delivered shows
+       - the workbook's exclusions (DON'T CALL, do not text, texted this
+         month) are applied by the bridge before the list comes back
+     The list and every send live on the bridge; the phone is a cache.
+     ═══════════════════════════════════════════════════════════════ */
+  var MKEY='cc-deck-mkt';
+  function fmtPhone(d){ d=String(d||''); return d.length===10?('('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6)):d; }
+  var MKT={campaigns:[],rows:[],sel:'',pending:[],local:{}};
+  var rm=readKey(MKEY); if(rm.ok&&rm.val){ MKT.local=rm.val.local||{}; MKT.sel=rm.val.sel||''; MKT.pending=rm.val.pending||[]; }
+  function mktSave(){ try{ localStorage.setItem(MKEY,JSON.stringify({local:MKT.local,sel:MKT.sel,pending:MKT.pending})); }catch(e){} }
+  var ITEMS=window.__ITEMS||{};
+  var MKT_CAPS=[25,40,60,75,100];          /* day 1, day 2, … never past the last */
+  var MKT_HOURS=[9,18];
+  var MKT_PAUSE_MIN=20, MKT_PAUSE_MAX=90;  /* seconds between contacts */
+  var MKT_DEFAULT_TPL="Hey {first}, it's Carlo with Cutco. {one} The Santa Cruz County Fair is this week and I'm doing something I've never done: a Golden Ticket for my best customers. Come by my booth, say hi, and I'll hand you a free piece of Cutco you can't buy anywhere, plus two entries in the raffle. Want your name on one? Reply YES and tell me which day you're thinking.";
+
+  /* ── CSV (VAST Action export) ── */
+  function parseCsv(text){
+    var rows=[],row=[],cell='',q=false,i=0;
+    text=String(text||'').replace(/^﻿/,'');
+    for(;i<text.length;i++){
+      var ch=text[i];
+      if(q){ if(ch==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=ch; }
+      else if(ch==='"') q=true;
+      else if(ch===','){ row.push(cell); cell=''; }
+      else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+      else cell+=ch;
+    }
+    if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(c){ return String(c).trim()!==''; }); });
+  }
+  function d10(v){ var d=String(v||'').replace(/\D/g,''); if(d.length===11&&d.charAt(0)==='1') d=d.slice(1); return d.length===10?d:''; }
+  function itemNames(codes){
+    var out=[]; String(codes||'').split(';').forEach(function(c){ c=c.trim(); if(!c) return; var n=ITEMS[c]||ITEMS[c.replace(/[A-Z]+$/,'')]; if(n&&out.indexOf(n)<0) out.push(n); });
+    return out;
+  }
+  /* the personal line: what makes this text unlike the last one */
+  function oneLine(c){
+    var names=itemNames(c.items), yr=(String(c.lastOrder||'').match(/(\d{4})/)||[])[1];
+    var pick=names.filter(function(n){ return !/Set|Board|Engrav|Sheath|Wrap|Gift|Card|Letter/i.test(n); });
+    if(pick.length){ var n=pick[Math.floor((c.ph?Number(c.ph.slice(-2)):0)%pick.length)]; return 'Hope the '+n+(/s$/.test(n)?' are':' is')+' still earning its keep.'; }
+    if(yr) return 'It has been a while since '+yr+'.';
+    if(c.city) return 'Hope things are good in '+c.city+'.';
+    return 'Hope you and the knives are well.';
+  }
+  function fromVast(rows){
+    var head=rows[0].map(function(h){ return String(h).trim().toLowerCase(); });
+    var ix=function(n){ return head.indexOf(n.toLowerCase()); };
+    var iF=ix('First Name'), iL=ix('Last Name'), iC=ix('Shipping City'), iZ=ix('Shipping Zip'), iI=ix('Items Owned'), iD=ix('Last Order Date'), iLife=ix('Lifetime CPO'), iO=ix('Lifetime Orders'), iE=ix('Contact Email Status'), iDNS=ix('Do Not Send'), iT=ix('Tags');
+    var phones=['Contact Mobile','Contact Home','Contact Office','Contact Mobile1','Contact Home1','Contact Office1','Account Office','Phone','Mobile'].map(ix).filter(function(i){ return i>=0; });
+    if(iF<0&&ix('Name')<0) return null;
+    var out=[];
+    rows.slice(1).forEach(function(r){
+      var ph=''; phones.some(function(i){ ph=d10(r[i]); return !!ph; });
+      var c={ first:String(iF>=0?r[iF]:'').trim(), last:String(iL>=0?r[iL]:'').trim(), ph:ph, city:String(iC>=0?r[iC]:'').trim(),
+        zip:String(iZ>=0?r[iZ]:'').trim().slice(0,5), items:String(iI>=0?r[iI]:'').trim(), lastOrder:String(iD>=0?r[iD]:'').trim(),
+        life:Number(String(iLife>=0?r[iLife]:'').replace(/[^0-9.]/g,''))||0, orders:Number(iO>=0?r[iO]:0)||0,
+        emailBad:String(iE>=0?r[iE]:'').toLowerCase()==='false', dns:String(iDNS>=0?r[iDNS]:'').trim()!=='', tags:String(iT>=0?r[iT]:'') };
+      if(!c.first&&!c.last) return;
+      if(/do not service|do not contact|do not text/i.test(c.tags)||c.dns) return;
+      c.line=oneLine(c);
+      out.push(c);
+    });
+    return out;
+  }
+  function fill(tpl,c){
+    return String(tpl||'').replace(/\{first\}/g,c.first||'there').replace(/\{one\}/g,c.line||'').replace(/\{city\}/g,c.city||'').replace(/\s{2,}/g,' ').trim();
+  }
+
+  /* ── bridge ── */
+  function mktFetch(){
+    if(!SYNC||!SYNC.url) return Promise.resolve(false);
+    return fetch(SYNC.url+'?k='+encodeURIComponent(SYNC.key)+'&fn=campaigns&t='+Date.now()).then(function(r){ return r.json(); })
+      .then(function(d){ if(!d||!d.ok) return false; MKT.campaigns=d.campaigns||[]; MKT.rows=d.rows||[]; return true; }).catch(function(){ return false; });
+  }
+  function mktPost(body){
+    body.k=SYNC.key; body.fn='campaign';
+    return fetch(SYNC.url,{method:'POST',body:JSON.stringify(body)}).then(function(r){ return r.json(); });
+  }
+  function mktFlush(){
+    if(!MKT.pending.length||!SYNC) return Promise.resolve();
+    var items=MKT.pending.slice();
+    return mktPost({op:'mark',items:items}).then(function(d){ if(d&&d.ok){ MKT.pending=MKT.pending.filter(function(x){ return items.indexOf(x)<0; }); mktSave(); } }).catch(function(){});
+  }
+  function mark(row,st,note){
+    row.st=st; if(/^(sent|replied|claimed|stop)$/.test(st)&&!row.day) row.day=ymdLocalNow_(); if(note) row.note=note;
+    MKT.pending.push({c:row.c,key:row.key,st:st,day:row.day||'',note:note||''});
+    var L=MKT.local[row.c]||(MKT.local[row.c]={sent:{}});
+    if(st==='sent'){ L.sent[ymdLocalNow_()]=(L.sent[ymdLocalNow_()]||0)+1; L.lastSent=Date.now(); L.wait=MKT_PAUSE_MIN+Math.floor(Math.random()*(MKT_PAUSE_MAX-MKT_PAUSE_MIN+1)); }
+    mktSave(); mktFlush();
+  }
+
+  /* ── the queue and its rules ── */
+  function campRows(name){ return MKT.rows.filter(function(r){ return r.c===name; }); }
+  function sentDays(name){ var L=MKT.local[name]||{sent:{}}; var days={}; campRows(name).forEach(function(r){ if(r.day&&/^(sent|replied|claimed)$/.test(r.st)) days[r.day]=(days[r.day]||0)+1; }); Object.keys(L.sent||{}).forEach(function(d){ days[d]=Math.max(days[d]||0,L.sent[d]); }); return days; }
+  function capToday(name){
+    var days=sentDays(name), today=ymdLocalNow_(), past=Object.keys(days).filter(function(d){ return d<today&&days[d]>0; }).length;
+    return MKT_CAPS[Math.min(past,MKT_CAPS.length-1)];
+  }
+  function sentToday(name){ return sentDays(name)[ymdLocalNow_()]||0; }
+  function inHours(){ var h=new Date().getHours(); return h>=MKT_HOURS[0]&&h<MKT_HOURS[1]; }
+  function pausedUntil(name){ var c=MKT.campaigns.filter(function(x){ return x.name===name; })[0]; return (c&&c.pausedUntil&&c.pausedUntil>=ymdLocalNow_())?c.pausedUntil:''; }
+  function nextRow(name){
+    /* customers who bought most recently first: they know the number */
+    var q=campRows(name).filter(function(r){ return r.st==='queued'; });
+    q.sort(function(a,b){ return String(b.lastOrder).slice(-4)+String(b.lastOrder).slice(0,5) < String(a.lastOrder).slice(-4)+String(a.lastOrder).slice(0,5) ? -1 : 1; });
+    return q[0]||null;
+  }
+  function waitLeft(name){ var L=MKT.local[name]; if(!L||!L.lastSent) return 0; var left=Math.ceil((L.lastSent+(L.wait||30)*1000-Date.now())/1000); return left>0?left:0; }
+
+  /* ── render ── */
+  var mktTimer=null;
+  function renderMkt(){
+    var host=document.getElementById('mkt'); if(!host) return;
+    if(mktTimer){ clearInterval(mktTimer); mktTimer=null; }
+    var h='';
+    if(!SYNC||!SYNC.url){ host.innerHTML='<div class="intro"><span class="eyebrow">Marketing</span><h2>Connect the bridge first</h2><p>Campaigns live in the Command Center; save the bridge URL and key in Sync settings.</p></div>'; return; }
+    var names=MKT.campaigns.map(function(c){ return c.name; });
+    if(MKT.sel&&names.indexOf(MKT.sel)<0) MKT.sel='';
+    if(!MKT.sel&&names.length) MKT.sel=names[names.length-1];
+    h+='<div class="intro"><span class="eyebrow">Marketing</span><h2>Text campaigns</h2><p>A VAST Action export in, one text at a time out, inside the limits that keep iMessage yours. Every message is sent by you.</p></div>';
+    /* the campaign list */
+    h+='<div class="mk-card"><h3>Campaigns</h3>';
+    if(!names.length) h+='<p class="m">None yet. Upload a list below.</p>';
+    else h+='<div class="whenchips">'+names.map(function(n){ return '<button class="wc'+(n===MKT.sel?' on':'')+'" data-mksel="'+hesc(n)+'">'+hesc(n)+'</button>'; }).join('')+'</div>';
+    h+='</div>';
+    if(MKT.sel){
+      var name=MKT.sel, rows=campRows(name), cm=MKT.campaigns.filter(function(x){ return x.name===name; })[0]||{};
+      var n=function(st){ return rows.filter(function(r){ return r.st===st; }).length; };
+      var pu=pausedUntil(name), cap=capToday(name), st=sentToday(name), left=waitLeft(name);
+      h+='<div class="mk-card'+(pu?' mk-paused':'')+'"><h3>'+hesc(name)+'</h3>'
+        +(cm.start?'<p class="m">'+hesc(fmtDay(cm.start))+(cm.end?' to '+hesc(fmtDay(cm.end)):'')+'</p>':'')
+        +'<div class="mk-stats"><span><b>'+n('queued')+'</b>to go</span><span><b>'+n('sent')+'</b>sent</span><span><b>'+n('replied')+'</b>replied</span><span><b>'+n('claimed')+'</b>claimed</span><span><b>'+n('excluded')+'</b>excluded</span><span><b>'+st+' / '+cap+'</b>today</span></div>';
+      if(pu) h+='<p class="m"><b>Paused until '+hesc(fmtDay(pu))+'.</b> A Not Delivered means iMessage is watching; two days of quiet is the price of keeping it.</p><div class="mk-actions"><button class="daybtn" data-mkunpause="1">I was wrong, unpause</button></div>';
+      h+='<details class="syncbox"><summary>Template</summary><textarea id="mk-tpl" aria-label="Template">'+hesc(cm.template||'')+'</textarea><p class="m">{first} is the first name, {one} the personal line the deck writes from their row. Edit and save; sends from now on use the new words.</p><div class="dayrow"><button class="daybtn primary" data-mktplsave="1">Save template</button><span id="mk-tplmsg"></span></div></details>';
+      h+='</div>';
+      /* the next one */
+      var row=pu?null:nextRow(name);
+      if(!row){
+        h+='<div class="mk-card"><h3>'+(pu?'Paused':(rows.length&&!n('queued')?'Everyone on this list has been texted.':'Nothing queued.'))+'</h3></div>';
+      } else if(!inHours()){
+        h+='<div class="mk-card"><h3>Outside texting hours</h3><p class="m">Campaign texts go out between '+MKT_HOURS[0]+'am and '+(MKT_HOURS[1]-12)+'pm. Next up: '+hesc(row.first+' '+row.last)+'.</p></div>';
+      } else if(st>=cap){
+        h+='<div class="mk-card"><h3>Today\'s '+cap+' are out.</h3><p class="m">Tomorrow the cap steps up if replies came in and nothing bounced. Next up: '+hesc(row.first+' '+row.last)+'.</p></div>';
+      } else {
+        var body=fill(cm.template,row);
+        h+='<div class="mk-next"><div class="who">'+hesc(row.first+' '+row.last)+'</div>'
+          +'<div class="why">'+hesc([row.city, row.lastOrder?('last order '+row.lastOrder):'', row.life?('$'+Math.round(row.life).toLocaleString()+' lifetime'):'', row.orders?(row.orders+' orders'):''].filter(Boolean).join(' · '))+'</div>'
+          +'<div class="msg">'+hesc(body)+'</div>'
+          +(row.note?'<div class="warn">'+hesc(row.note)+' — they may already be getting a text from the deck this week; skip if so.</div>':'')
+          +'<div class="mk-actions">'
+          +(left?'<span class="tel off"><span>Text '+hesc(fmtPhone(row.ph))+'</span><span>wait '+left+'s</span></span>'
+                :'<a class="tel" href="sms:+1'+row.ph+'&body='+encodeURIComponent(body)+'" data-mktext="'+hesc(row.key)+'"><span>Text '+hesc(fmtPhone(row.ph))+'</span><span>Open Messages</span></a>')
+          +'<button class="daybtn primary" data-mkmark="sent" data-key="'+hesc(row.key)+'">Sent</button>'
+          +'<button class="daybtn" data-mkmark="skipped" data-key="'+hesc(row.key)+'">Skip</button>'
+          +'<button class="daybtn" data-mkmark="stop" data-key="'+hesc(row.key)+'">Do not text</button>'
+          +'</div>'
+          +(left?'<div class="mk-wait">A short, random pause between texts. '+left+' seconds.</div>':'')
+          +'<div class="mk-actions"><button class="daybtn" data-mkpause="1">Not Delivered / green bubble: pause 48h</button></div>'
+          +'</div>';
+      }
+      /* replies and claims: the score */
+      var sent=rows.filter(function(r){ return /^(sent|replied|claimed)$/.test(r.st); });
+      if(sent.length){
+        h+='<div class="mk-card"><h3>Sent · tap when they reply or claim</h3><div class="mk-log">'+sent.slice().reverse().slice(0,60).map(function(r){
+          return '<div><b>'+hesc(r.first+' '+r.last)+'</b> · '+hesc(r.st)+(r.day?' '+hesc(r.day):'')
+            +(r.st==='sent'?' <button class="daybtn" data-mkmark="replied" data-key="'+hesc(r.key)+'">Replied</button>':'')
+            +(r.st!=='claimed'?' <button class="daybtn" data-mkmark="claimed" data-key="'+hesc(r.key)+'">Claimed</button>':'')
+            +' <button class="daybtn" data-mkmark="stop" data-key="'+hesc(r.key)+'">STOP</button></div>';
+        }).join('')+'</div></div>';
+      }
+    }
+    /* upload */
+    h+='<div class="mk-card"><h3>New list</h3><p class="m">Export the query from VAST Action, then pick the CSV here. VAST does the who (radius, orders, lifetime); the deck does the sending.</p>'
+      +'<input id="mk-name" type="text" placeholder="Campaign name (Santa Cruz County Fair 2026)" autocapitalize="words">'
+      +'<input id="mk-start" type="date" aria-label="Event start"><input id="mk-end" type="date" aria-label="Event end">'
+      +'<textarea id="mk-newtpl" placeholder="Template. {first} = first name, {one} = the personal line the deck writes.">'+hesc(MKT_DEFAULT_TPL)+'</textarea>'
+      +'<input id="mk-file" type="file" accept=".csv,text/csv">'
+      +'<div id="mk-preview" class="mk-preview" hidden></div>'
+      +'<div class="dayrow"><button class="daybtn primary" id="mk-save" disabled>Save campaign</button><span id="mk-msg"></span></div></div>';
+    host.innerHTML=h;
+    if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){ if(!waitLeft(MKT.sel)){ clearInterval(mktTimer); mktTimer=null; renderMkt(); } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); var l=waitLeft(MKT.sel); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; } },1000);
+  }
+  window.__renderMkt=function(){ renderMkt(); mktFetch().then(function(okk){ if(okk) renderMkt(); }); };
+
+  var mktParsed=null;
+  document.addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('[data-mksel],[data-mkmark],[data-mkpause],[data-mkunpause],[data-mktplsave],#mk-save,[data-mktext]'):null;
+    if(!t) return;
+    if(t.dataset.mksel!==undefined){ MKT.sel=t.dataset.mksel; mktSave(); renderMkt(); return; }
+    if(t.dataset.mktext!==undefined){ /* Messages opens; Sent is confirmed by hand */ return; }
+    if(t.dataset.mkmark){
+      var row=MKT.rows.filter(function(r){ return r.c===MKT.sel&&r.key===t.dataset.key; })[0]; if(!row) return;
+      if(t.dataset.mkmark==='sent'&&sentToday(MKT.sel)>=capToday(MKT.sel)){ banner('Today\'s cap is reached. Tomorrow.'); return; }
+      mark(row,t.dataset.mkmark); renderMkt(); return;
+    }
+    if(t.dataset.mkpause!==undefined){
+      mktPost({op:'pause',campaign:MKT.sel}).then(function(d){ if(d&&d.ok){ var c=MKT.campaigns.filter(function(x){ return x.name===MKT.sel; })[0]; if(c) c.pausedUntil=d.pausedUntil; banner('Paused until '+fmtDay(d.pausedUntil)+'. Stop for two days; that is what recovers it.'); renderMkt(); } else banner('Could not pause at the bridge.'); }).catch(function(){ banner('Could not reach the bridge.'); });
+      return;
+    }
+    if(t.dataset.mkunpause!==undefined){
+      mktPost({op:'pause',campaign:MKT.sel,clear:true}).then(function(d){ if(d&&d.ok){ var c=MKT.campaigns.filter(function(x){ return x.name===MKT.sel; })[0]; if(c) c.pausedUntil=''; renderMkt(); } });
+      return;
+    }
+    if(t.dataset.mktplsave!==undefined){
+      var tpl=document.getElementById('mk-tpl').value, cm=MKT.campaigns.filter(function(x){ return x.name===MKT.sel; })[0];
+      document.getElementById('mk-tplmsg').textContent='Saving…';
+      mktPost({op:'save',campaign:{name:MKT.sel,template:tpl,start:cm&&cm.start,end:cm&&cm.end,contacts:[{first:'x',last:'x',ph:''}]}}).then(function(d){ if(d&&d.ok){ if(cm) cm.template=tpl; document.getElementById('mk-tplmsg').textContent='Saved.'; setTimeout(renderMkt,600); } else document.getElementById('mk-tplmsg').textContent='Not saved: '+((d&&d.error)||'bridge'); });
+      return;
+    }
+    if(t.id==='mk-save'){
+      var name=String(document.getElementById('mk-name').value||'').trim(), msg=document.getElementById('mk-msg');
+      var ntpl=String(document.getElementById('mk-newtpl').value||'').trim();
+      if(!name){ msg.textContent='Name the campaign.'; return; }
+      if(!mktParsed||!mktParsed.length){ msg.textContent='Pick the CSV first.'; return; }
+      if(ntpl.indexOf('{first}')<0){ msg.textContent='The template needs {first}.'; return; }
+      t.disabled=true; msg.textContent='Saving '+mktParsed.length+'…';
+      mktPost({op:'save',campaign:{name:name,template:ntpl,cap:MKT_CAPS[0],start:document.getElementById('mk-start').value||'',end:document.getElementById('mk-end').value||'',contacts:mktParsed}})
+        .then(function(d){
+          if(!d||!d.ok){ msg.textContent='Not saved: '+((d&&d.error)||'bridge'); t.disabled=false; return; }
+          msg.textContent='Saved: '+d.counts.queued+' to text, '+(d.counts.noText+d.counts.texted)+' excluded, '+d.duplicates+' duplicates.';
+          MKT.sel=name; mktParsed=null; mktSave();
+          mktFetch().then(function(){ renderMkt(); });
+        }).catch(function(){ msg.textContent='Could not reach the bridge.'; t.disabled=false; });
+    }
+  });
+  document.addEventListener('change',function(e){
+    if(!e.target||e.target.id!=='mk-file') return;
+    var f=e.target.files&&e.target.files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      var rows=parseCsv(rd.result); var list=rows.length>1?fromVast(rows):null;
+      var pv=document.getElementById('mk-preview'), sv=document.getElementById('mk-save'), msg=document.getElementById('mk-msg');
+      if(!list){ pv.hidden=true; sv.disabled=true; msg.textContent='That does not look like a VAST export (no First Name column).'; mktParsed=null; return; }
+      mktParsed=list;
+      var withPh=list.filter(function(c){ return c.ph; }).length;
+      msg.textContent=list.length+' people, '+withPh+' with a number.';
+      pv.hidden=false; pv.innerHTML=list.slice(0,12).map(function(c){ return '<div><b>'+hesc(c.first+' '+c.last)+'</b> · '+hesc(c.city)+' · '+hesc(c.line)+'</div>'; }).join('')+(list.length>12?'<div>… and '+(list.length-12)+' more</div>':'');
+      sv.disabled=!withPh;
+    };
+    rd.readAsText(f);
+  });
+  window.__mkt={parseCsv:parseCsv,fromVast:fromVast,fill:fill,oneLine:oneLine,capToday:capToday,state:MKT};
+  mktFlush();
 
   /* boot */
   var archived=archiveDay();
