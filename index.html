@@ -356,6 +356,8 @@ footer .m{font-size:12px;color:var(--ink-3)}
 .mk-next .who{font-size:18px;font-weight:700}
 .mk-next .why{color:var(--ink-3);font-size:12.5px;margin:2px 0 8px}
 .mk-next .msg{white-space:pre-wrap;font-size:15px;line-height:1.45;padding:10px 12px;border-radius:8px;background:var(--ground);border:1px solid var(--line)}
+textarea.msg{display:block;width:100%;box-sizing:border-box;font-family:inherit;color:var(--ink);resize:vertical;min-height:110px}
+textarea.msg:focus{outline:none;border-color:var(--brass)}
 .mk-next .warn{color:#8f2f2f;font-size:12.5px;margin-top:6px}
 .mk-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .mk-actions .tel{flex:1 1 100%;display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:10px;background:var(--brass);color:#fff;text-decoration:none;font-weight:700;font-size:16px}
@@ -2897,9 +2899,12 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      ═══════════════════════════════════════════════════════════════ */
   var MKEY='cc-deck-mkt';
   function fmtPhone(d){ d=String(d||''); return d.length===10?('('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6)):d; }
-  var MKT={campaigns:[],rows:[],sel:'',pending:[],local:{}};
-  var rm=readKey(MKEY); if(rm.ok&&rm.val){ MKT.local=rm.val.local||{}; MKT.sel=rm.val.sel||''; MKT.pending=rm.val.pending||[]; }
-  function mktSave(){ try{ localStorage.setItem(MKEY,JSON.stringify({local:MKT.local,sel:MKT.sel,pending:MKT.pending})); }catch(e){} }
+  /* edits: the text as Carlo rewrote it in the preview, by campaign|key,
+     so a redraw or a reopen never loses a personal line he typed */
+  var MKT={campaigns:[],rows:[],sel:'',pending:[],local:{},edits:{}};
+  var rm=readKey(MKEY); if(rm.ok&&rm.val){ MKT.local=rm.val.local||{}; MKT.sel=rm.val.sel||''; MKT.pending=rm.val.pending||[]; MKT.edits=rm.val.edits||{}; }
+  function mktSave(){ try{ localStorage.setItem(MKEY,JSON.stringify({local:MKT.local,sel:MKT.sel,pending:MKT.pending,edits:MKT.edits})); }catch(e){} }
+  function editKey(row){ return row.c+'|'+row.key; }
   var ITEMS=window.__ITEMS||{};
   var MKT_CAPS=[25,40,60,75,100];          /* day 1, day 2, … never past the last */
   var MKT_HOURS=[9,18];
@@ -2942,10 +2947,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      him. */
   /* the greeting never says who it is; the template does that once */
   var HI=['Hi {first}','Hey {first}','Hello {first}','{first}, hi','Quick one, {first}','Howdy {first}','Hey there {first}','{first}, quick message','Hi there {first}','Hey {first}, quick one','Hello there {first}','{first}, hey'];
-  var CHECK=['Hope you and the family are doing well.','Hope the year is treating you well.','Hope everything is good in your kitchen.','Hope all your Cutco is still doing its job.','Hope life is treating you well.','Hope things are good on your end.','Hope the knives are still pulling their weight.','Hope you are having a good week.','Hope the family is well and the knives are sharp.','Hope all is well with you.','Hope everything is good with you and yours.','Hope summer treated you well.'];
+  /* Carlo, Sep 14: every line here has to work for any campaign (a fair, a
+     sale, a sharpening route, an art and wine festival) in any month, so
+     nothing names a season or a place; the template carries the reason */
+  var CHECK=['Hope you and the family are doing well.','Hope the year is treating you well.','Hope everything is good in your kitchen.','Hope all your Cutco is still doing its job.','Hope life is treating you well.','Hope things are good on your end.','Hope the knives are still pulling their weight.','Hope you are having a good week.','Hope the family is well and the knives are sharp.','Hope all is well with you.','Hope everything is good with you and yours.','Hope this finds you well.'];
   var CHECK_YEAR=['Hope everything you picked up in {yr} is still treating you well.','Hope the pieces from {yr} are still earning their keep.','It has been a while since {yr}; hope all is well.'];
   var CHECK_CITY=['Hope things are good over in {city}.','Hope all is well in {city}.'];
-  var BYE=['Stay sharp.','Have a knife day.','Hope to see you soon.','Let me know how I can help.','Have a great day.','You are awesome.','Talk soon.','See you at the fair.','Appreciate you.','Hope to catch you there.','Thanks as always.','Be well.'];
+  var BYE=['Stay sharp.','Have a knife day.','Hope to see you soon.','Let me know how I can help.','Have a great day.','You are awesome.','Talk soon.','Here if you need anything.','Appreciate you.','Hope our paths cross soon.','Thanks as always.','Be well.'];
   function seedOf(c){ var d=String(c.ph||'').replace(/\D/g,''); return d?Number(d.slice(-4)):((c.first||'').length*7+(c.last||'').length*13); }
   function pick(list,seed,k){ return list[(seed*31+k*17)%list.length]; }
   function oneLine(c){
@@ -3017,6 +3025,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   }
   function sentToday(name){ return sentDays(name)[ymdLocalNow_()]||0; }
   function inHours(){ var h=new Date().getHours(); return h>=MKT_HOURS[0]&&h<MKT_HOURS[1]; }
+  window.__mktHours=function(a,b){ MKT_HOURS=[a,b]; };
   function pausedUntil(name){ var c=MKT.campaigns.filter(function(x){ return x.name===name; })[0]; return (c&&c.pausedUntil&&c.pausedUntil>=ymdLocalNow_())?c.pausedUntil:''; }
   function nextRow(name){
     /* the bridge ranks the list: anyone who could lead to a business order
@@ -3036,7 +3045,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(mktTimer){ clearInterval(mktTimer); mktTimer=null; }
     var h='';
     if(!SYNC||!SYNC.url){ host.innerHTML='<div class="intro"><span class="eyebrow">Marketing</span><h2>Connect the bridge first</h2><p>Campaigns live in the Command Center; save the bridge URL and key in Sync settings.</p></div>'; return; }
-    var names=MKT.campaigns.map(function(c){ return c.name; });
+    /* a closed campaign (deleted after texts went out) stays in the sheet
+       for the 30-day rule and leaves the phone */
+    var names=MKT.campaigns.filter(function(c){ return !c.closed; }).map(function(c){ return c.name; });
     if(MKT.sel&&names.indexOf(MKT.sel)<0) MKT.sel='';
     if(!MKT.sel&&names.length) MKT.sel=names[names.length-1];
     h+='<div class="intro"><span class="eyebrow">Marketing</span><h2>Text campaigns</h2><p>A VAST Action export in, one text at a time out, inside the limits that keep iMessage yours. Every message is sent by you.</p></div>';
@@ -3051,9 +3062,9 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var pu=pausedUntil(name), cap=capToday(name), st=sentToday(name), left=waitLeft(name);
       h+='<div class="mk-card'+(pu?' mk-paused':'')+'"><h3>'+hesc(name)+'</h3>'
         +(cm.start?'<p class="m">'+hesc(fmtDay(cm.start))+(cm.end?' to '+hesc(fmtDay(cm.end)):'')+'</p>':'')
-        +'<div class="mk-stats"><span><b>'+n('queued')+'</b>to go</span><span><b>'+n('sent')+'</b>sent</span><span><b>'+n('replied')+'</b>replied</span><span><b>'+n('claimed')+'</b>claimed</span><span><b>'+n('excluded')+'</b>excluded</span><span><b>'+st+' / '+cap+'</b>today</span></div>';
+        +'<div class="mk-stats"><span><b>'+n('queued')+'</b>to go</span><span><b>'+n('sent')+'</b>sent</span><span><b>'+n('replied')+'</b>replied</span><span><b>'+n('claimed')+'</b>redeemed</span><span><b>'+n('excluded')+'</b>excluded</span><span><b>'+st+' / '+cap+'</b>today</span></div>';
       if(pu) h+='<p class="m"><b>Paused until '+hesc(fmtDay(pu))+'.</b> A Not Delivered means iMessage is watching; two days of quiet is the price of keeping it.</p><div class="mk-actions"><button class="daybtn" data-mkunpause="1">I was wrong, unpause</button></div>';
-      h+='<div class="mk-actions"><button class="daybtn" data-mkdel="1">'+(MKT.delArm===name?'Tap again to delete '+hesc(name):'Delete this campaign')+'</button></div>';
+      h+='<div class="mk-actions"><button class="daybtn" data-mkdel="1"'+(MKT.delArm===name?' style="background:#8f2f2f;color:#fff;border-color:#8f2f2f"':'')+'>'+(MKT.delArm===name?'Tap again to delete '+hesc(name):'Delete this campaign')+'</button></div>';
       h+='<details class="syncbox"><summary>Template</summary><textarea id="mk-tpl" aria-label="Template">'+hesc(cm.template||'')+'</textarea><p class="m">{hi} = greeting with their name, {one} = warm check-in, {bye} = sign-off, each drawn from a dozen lines in your voice. Edit and save; sends from now on use the new words.</p><div class="dayrow"><button class="daybtn primary" data-mktplsave="1">Save template</button><span id="mk-tplmsg"></span></div></details>';
       h+='</div>';
       /* the next one */
@@ -3065,15 +3076,19 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       } else if(st>=cap){
         h+='<div class="mk-card"><h3>Today\'s '+cap+' are out.</h3><p class="m">Tomorrow the cap steps up if replies came in and nothing bounced. Next up: '+hesc(row.first+' '+row.last)+'.</p></div>';
       } else {
-        var body=fill(cm.template,row);
+        /* Carlo, Sep 14: the countdown is the moment to personalise, so the
+           preview is a box he can type in ("great seeing you two at the SV
+           Art and Wine"); what is in the box is what Messages opens with */
+        var body=MKT.edits[editKey(row)]||fill(cm.template,row);
         h+='<div class="mk-next"><div class="who">'+hesc(row.first+' '+row.last)+'</div>'
           +(row.biz?'<div class="why" style="color:var(--brass);font-weight:600">Business: '+hesc(row.biz)+'</div>':'')
           +'<div class="why">'+hesc([row.city, row.lastOrder?('last order '+row.lastOrder):'', row.life?('$'+Math.round(row.life).toLocaleString()+' lifetime'):'', row.orders?(row.orders+' orders'):''].filter(Boolean).join(' · '))+'</div>'
-          +'<div class="msg">'+hesc(body)+'</div>'
+          +'<textarea id="mk-body" class="msg" rows="5" aria-label="The text" data-key="'+hesc(row.key)+'">'+hesc(body)+'</textarea>'
+          +'<div class="dim" style="font-size:12px;margin-top:4px">'+(MKT.edits[editKey(row)]?'Edited by you. ':'')+'Change anything here while the clock runs; Messages opens with exactly these words.</div>'
           +(row.note?'<div class="warn">'+hesc(row.note)+' — they may already be getting a text from the deck this week; skip if so.</div>':'')
           +'<div class="mk-actions">'
           +(left?'<span class="tel off"><span>Text '+hesc(fmtPhone(row.ph))+'</span><span>wait '+left+'s</span></span>'
-                :'<a class="tel" href="sms:+1'+row.ph+'&body='+encodeURIComponent(body)+'" data-mktext="'+hesc(row.key)+'"><span>Text '+hesc(fmtPhone(row.ph))+'</span><span>Open Messages</span></a>')
+                :liveLink(row,body))
           +'<button class="daybtn primary" data-mkmark="sent" data-key="'+hesc(row.key)+'">Sent</button>'
           +'<button class="daybtn" data-mkmark="skipped" data-key="'+hesc(row.key)+'">Skip</button>'
           +'<button class="daybtn" data-mkmark="stop" data-key="'+hesc(row.key)+'">Do not text</button>'
@@ -3085,10 +3100,13 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       /* replies and claims: the score */
       var sent=rows.filter(function(r){ return /^(sent|replied|claimed)$/.test(r.st); });
       if(sent.length){
-        h+='<div class="mk-card"><h3>Sent · tap when they reply or claim</h3><div class="mk-log">'+sent.slice().reverse().slice(0,60).map(function(r){
-          return '<div><b>'+hesc(r.first+' '+r.last)+'</b> · '+hesc(r.st)+(r.day?' '+hesc(r.day):'')
+        /* replied = they wrote back; redeemed = they took the offer (came
+           to the booth, booked the visit, bought). Redeemed is the number
+           that says whether the campaign paid. */
+        h+='<div class="mk-card"><h3>Sent · tap when they reply or take the offer</h3><div class="mk-log">'+sent.slice().reverse().slice(0,60).map(function(r){
+          return '<div><b>'+hesc(r.first+' '+r.last)+'</b> · '+hesc(r.st==='claimed'?'redeemed':r.st)+(r.day?' '+hesc(r.day):'')
             +(r.st==='sent'?' <button class="daybtn" data-mkmark="replied" data-key="'+hesc(r.key)+'">Replied</button>':'')
-            +(r.st!=='claimed'?' <button class="daybtn" data-mkmark="claimed" data-key="'+hesc(r.key)+'">Claimed</button>':'')
+            +(r.st!=='claimed'?' <button class="daybtn" data-mkmark="claimed" data-key="'+hesc(r.key)+'">Redeemed</button>':'')
             +' <button class="daybtn" data-mkmark="stop" data-key="'+hesc(r.key)+'">STOP</button></div>';
         }).join('')+'</div></div>';
       }
@@ -3112,13 +3130,38 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(mktParsed&&mktParsed.length){ var msg0=document.getElementById('mk-msg'), sv0=document.getElementById('mk-save'); if(msg0) msg0.textContent=mktParsed.length+' people, '+mktParsed.filter(function(c){ return c.ph; }).length+' with a number (file still loaded).'; if(sv0) sv0.disabled=false; }
     if(focusId&&document.getElementById(focusId)){ try{ var fe=document.getElementById(focusId); fe.focus(); if(fe.setSelectionRange&&fe.value) fe.setSelectionRange(fe.value.length,fe.value.length); }catch(e){} }
     tplPreview();
-    if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){ if(!waitLeft(MKT.sel)){ if(typing()) return; clearInterval(mktTimer); mktTimer=null; renderMkt(); } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); var l=waitLeft(MKT.sel); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; } },1000);
+    /* the countdown: the tick updates the seconds, and when the clock hits
+       zero the greyed button becomes the live one in place, built from
+       whatever is in the box at that moment. No redraw, so nothing he typed
+       during the wait is lost. */
+    if(MKT.sel&&waitLeft(MKT.sel)) mktTimer=setInterval(function(){
+      var l=waitLeft(MKT.sel);
+      if(!l){
+        clearInterval(mktTimer); mktTimer=null;
+        var off=host.querySelector('.tel.off'), ta=host.querySelector('#mk-body'), w0=host.querySelector('.mk-wait');
+        var row0=off&&ta?campRows(MKT.sel).filter(function(r){ return r.key===ta.dataset.key; })[0]:null;
+        if(off&&row0){ off.outerHTML=liveLink(row0,ta.value); if(w0) w0.remove(); }
+        else if(!typing()) renderMkt();
+      } else { var w=host.querySelector('.mk-wait'); var t=host.querySelector('.tel.off span:last-child'); if(w) w.textContent='A short, random pause between texts. '+l+' seconds.'; if(t) t.textContent='wait '+l+'s'; }
+    },1000);
   }
-  window.__renderMkt=function(){ renderMkt(); mktFetch().then(function(okk){ if(okk) renderMkt(); }); };
+  /* the tappable Text button, carrying the words as they stand */
+  function liveLink(row,body){ return '<a class="tel" href="sms:+1'+row.ph+'&body='+encodeURIComponent(body)+'" data-mktext="'+hesc(row.key)+'"><span>Text '+hesc(fmtPhone(row.ph))+'</span><span>Open Messages</span></a>'; }
+  window.__renderMkt=function(){ renderMkt(); mktFetch().then(function(okk){ if(okk&&!typing()) renderMkt(); }); };
   /* a re-render while he is typing would also fire on every countdown tick;
      the tick only updates the two numbers, and the full redraw waits until
      no form field has focus */
-  function typing(){ var a=document.activeElement; return !!(a&&/^mk-(name|start|end|newtpl)$/.test(a.id||'')); }
+  function typing(){ var a=document.activeElement; return !!(a&&/^mk-(name|start|end|newtpl|body)$/.test(a.id||'')); }
+  /* typing in the box: remember the words for this person and point the
+     Text button at them */
+  document.addEventListener('input',function(e){
+    var ta=e.target; if(!ta||ta.id!=='mk-body') return;
+    var row=campRows(MKT.sel).filter(function(r){ return r.key===ta.dataset.key; })[0]; if(!row) return;
+    var cm=MKT.campaigns.filter(function(x){ return x.name===MKT.sel; })[0]||{};
+    if(ta.value.trim()===fill(cm.template,row)) delete MKT.edits[editKey(row)]; else MKT.edits[editKey(row)]=ta.value;
+    mktSave();
+    var a=document.querySelector('[data-mktext]'); if(a) a.setAttribute('href','sms:+1'+row.ph+'&body='+encodeURIComponent(ta.value));
+  });
 
   var mktParsed=null;
   /* a live preview under the template: the words as one real person would
@@ -3144,10 +3187,12 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var gone=MKT.sel; MKT.delArm='';
       mktPost({op:'delete',campaign:gone}).then(function(d){
         if(!d||!d.ok){ banner('Could not delete: '+((d&&d.error)||'bridge')); return; }
-        MKT.campaigns=MKT.campaigns.filter(function(c){ return c.name!==gone||d.closed; });
-        if(!d.closed){ MKT.rows=MKT.rows.filter(function(r){ return r.c!==gone; }); delete MKT.local[gone]; MKT.sel=''; }
-        else MKT.rows.forEach(function(r){ if(r.c===gone&&r.st==='queued') r.st='skipped'; });
-        mktSave(); banner(d.closed?(gone+' closed: it had texts sent, so it stays in the log and its queue is cleared.'):('Deleted '+gone+'.'),true);
+        /* either way it leaves the phone; a closed one keeps its rows in
+           the sheet so the 30-day rule still sees who was texted */
+        MKT.campaigns=MKT.campaigns.filter(function(c){ return c.name!==gone; });
+        MKT.rows=MKT.rows.filter(function(r){ return r.c!==gone; }); delete MKT.local[gone]; MKT.sel='';
+        Object.keys(MKT.edits).forEach(function(k){ if(k.indexOf(gone+'|')===0) delete MKT.edits[k]; });
+        mktSave(); renderMkt(); banner(d.closed?('Deleted '+gone+'. Its '+d.sent+' sent texts stay in the Command Center log.'):('Deleted '+gone+'.'),true);
         mktFetch().then(function(){ renderMkt(); });
       }).catch(function(){ banner('Could not reach the bridge.'); });
       return;
@@ -3157,7 +3202,11 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(t.dataset.mkmark){
       var row=MKT.rows.filter(function(r){ return r.c===MKT.sel&&r.key===t.dataset.key; })[0]; if(!row) return;
       if(t.dataset.mkmark==='sent'&&sentToday(MKT.sel)>=capToday(MKT.sel)){ banner('Today\'s cap is reached. Tomorrow.'); return; }
-      mark(row,t.dataset.mkmark); renderMkt(); return;
+      /* a text he rewrote goes to the sheet with the send, so the words he
+         actually uses feed the voice rules */
+      var ed=MKT.edits[editKey(row)]; var note=(t.dataset.mkmark==='sent'&&ed)?('sent as: '+ed):'';
+      mark(row,t.dataset.mkmark,note); if(ed){ delete MKT.edits[editKey(row)]; mktSave(); }
+      renderMkt(); return;
     }
     if(t.dataset.mkpause!==undefined){
       mktPost({op:'pause',campaign:MKT.sel}).then(function(d){ if(d&&d.ok){ var c=MKT.campaigns.filter(function(x){ return x.name===MKT.sel; })[0]; if(c) c.pausedUntil=d.pausedUntil; banner('Paused until '+fmtDay(d.pausedUntil)+'. Stop for two days; that is what recovers it.'); renderMkt(); } else banner('Could not pause at the bridge.'); }).catch(function(){ banner('Could not reach the bridge.'); });
