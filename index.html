@@ -511,6 +511,7 @@ textarea.msg:focus{outline:none;border-color:var(--brass)}
 <p class="m"><b>Statuses:</b> the blue row is what you did (LM, DLM for a call with no message, TX, EM, BAD# for a dead number). The traffic-light row is what came of it. LM and DLM count up, so each card tells you how many times you have tried.</p>
 <p class="m"><b>Where this comes from:</b> the people and their numbers are read live from the Command Center pipelines &mdash; edit a row and the deck has it. What to say on the call comes from the project. Nothing here is baked into the app.</p>
 <p class="m mono" id="buildline">v6.0</p>
+<p class="m mono" id="syncline" aria-live="polite"></p>
 </footer>
 
 <style>
@@ -892,7 +893,6 @@ window.__GEO={REGION:REGION,DRIVE:DRIVE,driveAllow:driveAllow,homeMiles:homeMile
 <script>
 window.__ITEMS={"2018C":"Homemaker + 8 Set with Block w/ Petite Chef","1818C":"Homemaker + 8 Set with Block w/ French Chef","2001C":"Homemaker Set with Block w/ Petite Chef","1801C":"Homemaker Set with Block w/ French Chef","2000C":"Homemaker Set with Trays w/ Petite Chef","1800C":"Homemaker Set with Trays w/ French Chef","2008C":"Galley + 6 Set with Block","2007C":"Galley Set with Block","1945C":"Essentials + 5 Set with Block","1845C":"Essentials Set with Block","1810C":"Studio + 4 Set with Block","1809C":"Studio Set with Block","1847C":"Space Saver Set with Block","2085C":"All Knife Set with Tray","1783C":"Kitchenette Set with Tray","1805C":"Gourmet Set with Block","1813C":"Ultimate Set with Block (w/ Table Knives)","6813C":"Ultimate Set with Steak Knives with Block","1814C":"Signature Set with Block (w/ Table Knives)","6814C":"Signature Set with Steak Knives with Block","2014C":"Santoku-Style Signature Set with Block (w/ Table Knives)","6014C":"Santoku-Style Signature Set with Steak Knives with Block","1720":"2-3/4\" Paring Knife","1721":"Trimmer","1768":"Spatula Spreader","1729":"6-3/4\" Petite Carver","1726":"Turning Fork","1722":"Butcher Knife","1728":"7-5/8\" Petite Chef","1724":"9-3/4\" Slicer","1723":"9\" Carver","1727":"Carving Fork","1759":"Table Knife","1813CB":"Ultimate Set with Block","1814CB":"Signature Set with Block","2014CB":"Santoku-Style Signature Set with Block","1801CB":"Homemaker Set with Block","2001CB":"Homemaker Set with Block","2007CB":"Galley Set with Block","1845CB":"Essentials Set with Block","1809CB":"Studio Set with Block","4820C":"Galley + 6 Table Knives with Ultimate Block Upgrade","4821C":"Galley + 6 Steak Knives with Ultimate Block Upgrade","4822C":"Galley + 6 Table Knives with Signature Block Upgrade","4823C":"Galley + 6 Steak Knives with Signature Block Upgrade","4824C":"Galley + 6 Table Knives with Homemaker Block Upgrade","4826C":"Homemaker + 8 Table Knives with Ultimate Block Upgrade","4827C":"Homemaker + 8 Steak Knives with Ultimate Block Upgrade","4828C":"Homemaker + 8 Table Knives with Signature Block Upgrade","4829C":"Homemaker + 8 Steak Knives with Signature Block Upgrade","4830C":"Signature + 10 Table Knives with Ultimate Block Upgrade","4831C":"Signature + 10 Steak Knives with Ultimate Block Upgrade","1504":"Cheese Knife (Soft Grip)","1503":"Ice Cream Scoop","1502":"Pizza Cutter","1501":"Vegetable Peeler","1507":"Wine Opener","1506":"Can Opener","1865":"4-Pc. Table Knife Set","2065":"4-Pc. Steak Knife Set","1864":"4-Pc. Table Knife Set with Tray","1982":"4-Pc. Stainless Table Knife Set","1869":"6-Pc. Table Knife Set","1987":"6-Pc. Stainless Table Knife Set","1860":"6-Pc. Table Knife Set with Block","1866":"8-Pc. Table Knife Set","1983":"8-Pc. Stainless Table Knife Set","1863":"8-Pc. Table Knife Set with Block","1867":"12-Pc. Table Knife Set","1988":"12-Pc. Stainless Table Knife Set","3738":"Hardy Slicer","1766":"7\" Santoku","2166":"5\" Petite Santoku","1737":"Cleaver With Sheath","1735":"7-1/2\" Vegetable Knife","2135":"6\" Vegetable Knife","4135":"4\" Vegetable Knife","1738":"Gourmet Prep Knife","1725":"9-1/4\" French Chef","1762":"Salmon Knife","2124":"7-3/4\" Petite Slicer","1761":"Boning Knife","2159":"Steak Knife","2120":"4\" Paring Knife","3120":"2-3/4\" Bird\u2019s Beak Paring Knife","3724":"Santoku-Style 10\" Slicer","3729":"Santoku-Style 8\" Carver","3721":"Santoku-Style Trimmer","3720":"Santoku-Style 3\" Paring Knife","1764":"Traditional Cheese Knife","2164":"Mini Cheese Knife","3764":"Santoku-Style Cheese Knife","4120":"3\" Gourmet Paring Knife","4720":"4\" Gourmet Paring Knife","2031":"3-Pc. Knife & Sheath Set","2033":"4-Pc. Knife & Sheath Set","2035":"5-Pc. Knife & Sheath Set","77":"Super Shears","79":"Shears Holster","124":"Small Cutting Board","125":"Medium Cutting Board","125R":"Red Medium Cutting Board","126":"Large Cutting Board","1904":"4-Pc. Cutlery Care Set","1905":"3-Pc. Cutting Board Set","84":"Knife Sharpener","1754":"Slice n\u2019 Serve","1754LH":"Slice n\u2019 Serve Left-Handers","1755":"Turn n\u2019 Serve","1756":"Professional Spatula","1709":"\u2013         Barbecue Set (Classic only)","1719":"5-Pc. Kitchen Tool Set (Tools Only)","1793":"6-Pc. Kitchen Tool Set (Tools Only)","1712":"Basting Spoon","1715":"Ladle","1714":"Mix-Stir","1713":"Slotted Spoon","1716":"Slotted Turner","1160":"Potato Masher","1946":"4-Pc. Stainless Place Setting","1947":"5-Pc. Stainless Place Setting with Stainless Table Knife","1984":"60-Pc. Stainless Flatware Set in FREE Chest (12 Place Settings)","1972":"3-Pc. Stainless Serving Set","1971":"3-Pc. Stainless Hostess Set","1970":"6-Pc. Stainless Accessory Set","1959":"Stainless Table Knife","331":"5-Pc. Garden Tool Set w/FREE Garden Bag","332":"4-Pc. Garden Tool Set with Bypass Pruners","326":"4-Pc. Garden Tool Set with Transplanting Trowel","328":"3-Pc. Garden Tool Set","300":"Cultivator","304":"Garden Trowel","302":"Transplanting Trowel","301":"Weeder","1527":"Bypass Pruners","5726":"BK       CUTCO\u00ae/KA-BAR\u00ae Outdoorsman                               S      N/A","1890BK":"BK       Golf Mate                                                S      N/A","1886BK":"BK, DB   Pocket Knife                                             S      DD","1769":"Hunting Knife                                            DD     S","5718BK":"BK, H    Drop Point Hunting Knife                                 DD     S","5718GC":"GC, PC   Camo Drop Point Hunting Knife                            DD     S","5719BK":"BK, H    Clip Point Outdoor Knife                                 DD     S","5719GC":"GC, PC   Camo Clip Point Outdoor Knife                            DD     S","5717BK":"BK, H    Gut Hook Hunting Knife                                   DD     S","5717GC":"GC, PC   Camo Gut Hook Hunting Knife                              DD     S","5721BK":"BK, H     Fisherman\u2019s Solution\u00ae                                   S      N/A","5721GC":"GC, PC    Camo Fisherman\u2019s Solution\u00ae                              S      N/A","1720SH":"2-3/4\" Paring Knife with Sheath","2120SH":"4\" Paring Knife with Sheath","1721SH":"Trimmer with Sheath","3721SH":"Santoku-Style Trimmer with Sheath","2159SH":"Steak Knife with Sheath","1759SH":"Table Knife with Sheath","1768SH":"Spatula Spreader with Sheath","1764SH":"Traditional Cheese Knife with Sheath","2166SH":"5\" Petite Santoku with Sheath","1729SH":"6-3/4\" Petite Carver with Sheath","1723SH":"9\" Carver with Sheath","1724SH":"9-3/4\" Slicer with Sheath","2124SH":"7-3/4\" Petite Slicer with Sheath","1762SH":"Salmon Knife with Sheath","1728SH":"7-5/8\" Petite Chef with Sheath","1725SH":"9-1/4\" French Chef with Sheath","1766SH":"7\" Santoku with Sheath","3738SH":"Hardy Slicer with Sheath","1738SH":"Gourmet Prep Knife with Sheath","4135SH":"4\" Vegetable Knife with Sheath","2135SH":"6\" Vegetable Knife with Sheath","1735SH":"7-1/2\" Vegetable Knife with Sheath","1854":"Bake n\u2019 Serve Set (regular Gift Box)","1854LH":"Bake n\u2019 Serve Set for Left-Handers (regular Gift Box)","1844CD":"Carver\u2019s Choice Set","1834CD":"Carving Set","1858CD":"Cheese Knife Combo","1822CD":"Club Mates","1853CD":"Cook\u2019s Combo","1849CD":"Culinary Companions","1821CD":"Deli Mates","1855CD":"Dessert Favorites","1838":"\u2013         Entertainer Pack (regular Gift Box)","1827CD":"Kitchen Classics","1837CD":"Party Favorites","1837CDLH":"Party Favorites for Left-Handers","1829CD":"\u2013         Party Pack","1842CD":"Party Starters","1828CD":"Peel n\u2019 Pare Pack","3849CD":"Petite Culinary Companions","3828CD":"Petite Prep Set","3836CD":"Petite Santoku-Style Cook\u2019s Combo","2060CD":"Prep & Party Set","1820CD":"Salad Mates","1859CD":"Santoku Classics","1850CD":"2-Pc Santoku Set","3822CD":"Santoku-Style Club Mates","1836CD":"Santoku-Style Cook\u2019s Combo","3852CD":"Santoku-Style Shear Utility Set","3908CD":"Shear Entertainer Set","1851CD":"Shear Favorites","3909CD":"Shear Prep Set","1852CD":"Shear Utility Set","1831":"Snack Pack (regular Gift Box)","3827CD":"Time Saver Set","3826CD":"Welcome Home Set","2130CD":"Wine & Cheese Set","6761CD":"Boning Knife","6138CD":"Gourmet Prep Knife","6738CD":"Hardy Slicer","6729CD":"6-3/4\" Petite Carver","6728CD":"7-5/8\" Petite Chef","6166CD":"5\" Petite Santoku","6124CD":"7-3/4\" Petite Slicer","6766CD":"7\" Santoku","6721CD":"Santoku-Style Trimmer","6754CD":"Slice n\u2019 Serve","6754CDLH":"Slice n\u2019 Serve for Left-Handers","6768CD":"Spatula Spreader","6159CD":"Steak Knife","677CD":"Super Shears","6764CD":"Traditional Cheese Knife","6121CD":"Trimmer","6755CD":"Turn n\u2019 Serve","6135CD":"6\" Vegetable Knife","6735CD":"7-1/2\" Vegetable Knife","1747":"Ultimate Set Block (32-Slot)","1652":"Signature Set Block (24-Slot)","1748":"Homemaker + 8 Set Block (18-Slot)","1741":"Homemaker Set Block (10-Slot)","1744":"Galley + 6 Set Block (13-Slot)","1743":"Galley Set Block (7-Slot)","1651":"Essentials + 5 Set Block (10-Slot)","1649":"Essentials Set Block (5-Slot)","1751":"Studio + 4 Set Block (8-Slot)","1740":"Studio Set Block (4-Slot)","1746":"Space Saver Set Block (5-Slot)","1749":"Gourmet Set Block (5-Slot)","1752":"Table Knife Set Block (6-Slot)","1753":"Table Knife Set Block (8-Slot)","1711":"Kitchen Tool Holder","1742":"5-Pc Knife & Fork Tray","1745":"4-Pc Table Knife Tray","1720-2":"2-3/4\" Paring Knife Sheath","2120-2":"4\" Paring Knife Sheath","1721-2":"Trimmer Sheath","3721-2":"Santoku-Style Trimmer Sheath","2159-2":"Steak Knife Sheath","1759-2":"Table Knife Sheath","1768-2":"Spatula Spreader Sheath","1764-2":"Traditional Cheese Knife Sheath","4135-2":"4\" Vegetable Knife Sheath","2166-2":"5\" Petite Santoku Sheath","1729-2":"6-3/4\" Petite Carver Sheath","1723-2":"9\" Carver Sheath","1724-2":"7-3/4\" Petite Slicer/9-3/4\" Slicer/Salmon Knife Sheath","1728-2":"7-5/8\" Petite Chef Sheath","1725-2":"9-1/4\" French Chef Sheath","1766-2":"7\" Santoku Sheath","3738-2":"Hardy Slicer/Gourmet Prep Knife Sheath","2135-2":"6\" Vegetable Knife Sheath","1735-2":"7-1/2\" Vegetable Knife Sheath","1737-2":"Cleaver Sheath","9922C":"Accomplished Chef Cookware Set","9918C":"Dedicated Chef Cookware Set","9901":"Aspiring Chef Cookware Set","1161":"Food Press","277":"12 oz. Bar Keepers Friend\u00ae Cleanser","278":"Handle Mitt","287":"Cooking Guide","938":"8\" Gourmet Fry Pan","930":"10\" Gourmet Fry Pan","932":"12\" Gourmet Fry Pan","931":"Griddle","936":"10 Qt. Stock Pot & Cover","939":"Wok & Cover","991":"1 Qt. Sauce Pan & Cover","992":"2 Qt. Sauce Pan & Cover","993":"3 Qt. Sauce Pan & Cover","998":"9\" Utility Pan & Cover","990":"11-1/2\" Skillet & Cover","990P":"11-1/2\" Skillet","990C":"Cover \u2013 6.3 Qt. Dutch Oven / Skillet","994":"4 Qt. Dutch Oven & Cover","995":"6.3 Qt. Dutch Oven Bottom","996":"High Dome Cover \u2013 6.3 Qt. Dutch Oven / Skillet","997":"Steamer Insert (fits 3 Qt.)","999":"Double Boiler Insert (fits 3 Qt.)","860":"3-Piece Nonstick Fry Pan Set","858":"8\" Nonstick Fry Pan","850":"10\" Nonstick Fry Pan","852":"12\" Nonstick Fry Pan","FLITZ50":"Flitz Polish","1502-1":"Blade for Pizza Cutter","1706":"Barbecue Fork","1707":"Barbecue Turner","1708":"Barbecue Tongs","1737-1":"Cleaver Only","1769-2":"Hunting Knife Repacement Sheath","5726-2":"CUTCO\u00ae/KA-BAR\u00ae Outdoorsman Replacement Sheath","5725-2":"CUTCO\u00ae/KA-BAR\u00ae Explorer Replacement Sheath","5720-2":"Fisherman's Solution\u00ae Replacement Sheath","5720B":"Fisherman's Solution\u00ae Blade Only","1950":"Stainless Dinner Fork","1951":"Stainless Teaspoon","1952":"Stainless Salad Fork","1953":"Stainless Soup Spoon","1960":"Stainless Serving Spoon","1961":"Stainless Slotted Serving Spoon","1962":"Stainless Serving Fork","1963":"Stainless Gravy Ladle","1964":"Stainless Sugar Spoon","1965":"Stainless Butter Knife","1530P":"1-1/2\" \u00d7 3\" Brass Plate with adhesive tape","1537S":"1-1/2\" \u00d7 3\" Silver Plate with adhesive tape","1536PH":"2\" \u00d7 3\" Brass Plate with holes","1536PT":"2\" \u00d7 3\" Brass Plate with adhesive tape","1536SH":"2\" \u00d7 3\" Silver Plate with holes","1536ST":"2\" \u00d7 3\" Silver Plate with adhesive tape"};</script>
 <script>
-
 window.__initDeck=function(){
   var KEY='cc-calldeck-v1', TKEY='cc-calldeck-day', NKEY='cc-calldeck-next', SKEY='cc-deck-sync',
       QKEY='cc-deck-queue-v1', SNAP='cc-deck-snap-', SALV='cc-deck-salvage',
@@ -1022,6 +1022,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     t.textContent=msg; b.hidden=false;
     b.className='banner'+(good?' good':'');
   }
+  window.__banner=banner;
   var bx=document.getElementById('bannerx');
   if(bx) bx.addEventListener('click',function(){ document.getElementById('banner').hidden=true; });
 
@@ -1855,6 +1856,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var b=e.target.closest('.sb'); if(!b) return;
       var id=c.dataset.id, v=b.dataset.v;
       state[id]=state[id]||{};
+      rollIfStale(id);
       var m=state[id].m=state[id].m||{};
       if(m[v]){
         delete m[v];
@@ -1886,6 +1888,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       var d=new Date(); d.setDate(d.getDate()+Number(w.dataset.when||1));
       var iso=d.getFullYear()+'-'+two(d.getMonth()+1)+'-'+two(d.getDate());
       var id=c.dataset.id; state[id]=state[id]||{};
+      rollIfStale(id);
       var off=(state[id].d===iso);
       /* Deck State keeps one row per contact per day, so a blank cell there
          means "nothing said today", not "cleared" — the bridge cannot tell
@@ -1902,6 +1905,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     c.addEventListener('click',function(e){
       var o=e.target.closest('.oc,.oy'); if(!o) return;
       var id=c.dataset.id; state[id]=state[id]||{};
+      rollIfStale(id);
       if(o.classList.contains('oc')){ state[id].to = (state[id].to===o.dataset.to) ? '' : o.dataset.to; }
       else { state[id].yrs = Number(o.dataset.y); }
       state[id].t=Date.now(); delete state[id].exp;
@@ -1913,6 +1917,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     [].forEach.call(c.querySelectorAll('.fi'),function(f){
       f.addEventListener('input',function(){
         var id=c.dataset.id; state[id]=state[id]||{};
+        rollIfStale(id);
         state[id][f.dataset.f]=f.value; state[id].t=Date.now(); delete state[id].exp;
         /* Emptying a field by hand is a retraction too, and it has to reach
            the sheet as one for the same reason the chip does. */
@@ -2645,27 +2650,44 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   function two(n){ return (n<10?'0':'')+n; }
   var lastLog=null;
   function buildReport(){
+    archiveDay();                       /* anything from before today is history by now */
     var now=new Date(), mid=midnight();
     /* v3.3: report window = everything since the LAST EXPORT (missed-night recovery),
        never smaller than the whole current day */
     var exp=0; try{ exp=Number(localStorage.getItem('cc-deck-export')||0)||0; }catch(e){}
     if(exp>0 && exp<Date.now()){ mid=Math.min(exp,mid); }
     var ds=two(now.getMonth()+1)+'/'+two(now.getDate())+'/'+now.getFullYear();
-    var touched=cards.filter(function(c){
-      var st=state[c.dataset.id];
-      return st && st.t && st.t>=mid && (best(st)||st.n||st.x||st.a);
+    /* Every piece of activity in the window: today's, straight off the
+       card, plus the dated history entries of unfiled earlier days (a day
+       rolls into history at the day change whether or not it was filed;
+       the report is what still catches a missed night). */
+    var events=[];
+    cards.forEach(function(c){
+      var id=c.dataset.id, st=state[id]; if(!st) return;
+      var m=todaysM(st)||{};
+      if(st.t && st.t>=mid && st.t>=midnight() && (best(st)||st.n||st.x||st.a)) events.push({c:c, id:id, m:m, n:st.n||'', x:st.x||'', a:st.a||'', d:st.d||'', city:st.c||'', day:''});
+      (st.h||[]).forEach(function(h){
+        /* unfiled means unfiled: never stamped by a Send, inside two weeks */
+        if(!h.ts || h.exp || h.ts<Date.now()-14*86400000) return;
+        if(h.ts<mid) mid=h.ts;
+        var hm={}; String(h.m||'').split('+').forEach(function(l){ l=l.trim().toLowerCase(); if(l) hm[l]=1; });
+        events.push({c:c, id:id, m:hm, n:h.n||'', x:h.x||'', a:h.a||'', d:'', city:'', day:h.d||''});
+      });
     });
-    touched.sort(function(a,b){
-      var ba=best(state[a.dataset.id]), bb=best(state[b.dataset.id]);
-      var ia=RANK.indexOf(ba), ib=RANK.indexOf(bb);
+    events.sort(function(a,b){
+      var da=a.day||'99/99', db=b.day||'99/99';
+      if(da!==db) return da<db?-1:1;   /* earlier days first, today last */
+      var ia=RANK.indexOf(best({m:a.m})), ib=RANK.indexOf(best({m:b.m}));
       return (ia<0?9:ia)-(ib<0?9:ib);
     });
-    var lines=[], next=[], badnums=[], called=0, conn=0, book=0, txn=0, emc=0, donec=0, orderc=0;
-    touched.forEach(function(c){
-      var st=state[c.dataset.id], m=st.m||{};
+    var lines=[], next=[], badnums=[], called=0, conn=0, book=0, txn=0, emc=0, donec=0, orderc=0, dials=0;
+    events.forEach(function(ev){
+      var c=ev.c, m=ev.m;
       var nm=c.querySelector('.nm').textContent, co=c.querySelector('.co').textContent;
       var any=false; for(var v in OUTREACH){ if(m[v]){ any=true; break; } }
       if(any) called++;
+      var dl=false; for(var v2 in DIALS){ if(m[v2]){ dl=true; break; } }
+      if(dl) dials++;
       if(m.connected||m.booked||m.done) conn++;
       if(m.booked) book++;
       if(m.tx) txn++;
@@ -2674,25 +2696,20 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       if(m.order) orderc++;
       if(m.bad) badnums.push(nm+' — '+co+' — '+(c.querySelector('.tel')?c.querySelector('.tel').getAttribute('data-raw')||'':''));
       var labs=RANK.filter(function(v){return m[v];}).map(function(v){return v.toUpperCase();});
-      lines.push((labs.length?'['+labs.join('+')+'] ':'[TOUCHED] ')+nm+' — '+co);
-      if(st.n) lines.push('  outcome: '+st.n);          /* legacy field, still printed if present */
-      if(st.x) lines.push('  notes: '+st.x);
-      if(st.c) lines.push('  city: '+st.c);
-      if(st.a||st.d){
-        lines.push('  next: '+(st.a||'follow up')+(st.d?(' [due '+st.d+']'):''));
-        next.push(nm+': '+(st.a||'follow up')+(st.d?(' — due '+st.d):''));
+      lines.push((labs.length?'['+labs.join('+')+'] ':'[TOUCHED] ')+nm+' — '+co+(ev.day?('  ('+ev.day+', unfiled)'):''));
+      if(ev.n) lines.push('  outcome: '+ev.n);          /* the order panel line */
+      if(ev.x) lines.push('  notes: '+ev.x);
+      if(ev.city) lines.push('  city: '+ev.city);
+      if(ev.a||ev.d){
+        lines.push('  next: '+(ev.a||'follow up')+(ev.d?(' [due '+ev.d+']'):''));
+        if(!ev.day) next.push(nm+': '+(ev.a||'follow up')+(ev.d?(' — due '+ev.d):''));
       }
       lines.push('');
     });
+    var touched=[]; events.forEach(function(ev){ if(touched.indexOf(ev.c)<0) touched.push(ev.c); });
     var cpo=document.getElementById('t-cpo').value||'0';
     var extraEm=Number(document.getElementById('t-em').value||0)||0;
     var em=emc+extraEm, orq=orderc, ad=donec;
-    var dials=0;
-    touched.forEach(function(c){
-      var m=(state[c.dataset.id]||{}).m||{};
-      var d=false; for(var v in DIALS){ if(m[v]){ d=true; break; } }
-      if(d) dials++;
-    });
     var out='CALL DECK LOG — '+ds+'\n';
     if(mid<midnight()){
       var w=new Date(mid);
@@ -2783,7 +2800,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   document.getElementById('mklog').addEventListener('click',function(){
     document.getElementById('logwrap').hidden=false;
     var txt=renderReport();
-    try{ navigator.clipboard.writeText(txt); }catch(e){}
+    try{ var pr=navigator.clipboard.writeText(txt); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){}
   });
   /* v5.0: 't-or' and 't-ad' were removed from the footer long ago but were
      still being wired up here. getElementById returned null, this threw, and
@@ -2832,39 +2849,56 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   });
 
   /* ── the day boundary ──────────────────────────────────────────
-     Wednesday's lit buttons were still lit on Thursday. Now: once a day has
-     been exported, it rolls into that contact's history and the card comes
-     back clean. An UNEXPORTED day is left alone on purpose, so a missed night
-     still shows up in tomorrow's report instead of vanishing. */
-  function archiveDay(){
-    var mid=midnight(), moved=0;
-    for(var id in state){
-      var e=state[id];
-      if(!e || !e.t || e.t>=mid) continue;
-      if(!e.exp) continue;
-      var labs=RANK.filter(function(v){ return e.m && e.m[v]; }).map(function(v){ return v.toUpperCase(); });
-      if(labs.length || e.n || e.x || e.a){
-        e.h=e.h||[];
-        var d=new Date(e.t);
-        e.h.push({d:two(d.getMonth()+1)+'/'+two(d.getDate()), m:labs.join('+'), n:e.n||'', x:e.x||'', a:e.a||''});
-        if(e.h.length>20) e.h=e.h.slice(-20);
-        moved++;
-      }
-      delete e.m; delete e.n; delete e.x; delete e.exp;
-      /* e.a (next action), e.c (city), e.d (follow-up date) and e.calls
-         survive on purpose: those are facts, not today's activity */
+     Wednesday's lit buttons were still lit on Thursday. Then (Sep 1) an
+     archived day was only one that had been filed with End my Day, so an
+     unfiled Monday sat dormant on the card: hidden, because its stamp was
+     old, until a tap on Wednesday gave the same set a new stamp and
+     Monday's SPOKE lit up next to Wednesday's LM, and went to the sheet in
+     Wednesday's row (Carlo, Oct 2). One day is one day. Every card's
+     activity from an earlier day rolls into its history at the day change,
+     filed or not; the report still catches an unfiled night by reading the
+     dated history since the last filing (buildReport). */
+  function archiveEntry(e){
+    if(!e || !e.t || e.t>=midnight()) return false;
+    var labs=RANK.filter(function(v){ return e.m && e.m[v]; }).map(function(v){ return v.toUpperCase(); });
+    var moved=false;
+    if(labs.length || e.n || e.x){
+      e.h=e.h||[];
+      var d=new Date(e.t);
+      e.h.push({d:two(d.getMonth()+1)+'/'+two(d.getDate()), ts:e.t, m:labs.join('+'), n:e.n||'', x:e.x||'', a:e.a||'', exp:!!e.exp});
+      if(e.h.length>20) e.h=e.h.slice(-20);
+      moved=true;
     }
+    delete e.m; delete e.n; delete e.x; delete e.exp;
+    delete e.cpo; delete e.to; delete e.yrs;     /* the order panel belongs to the day of the order */
+    /* e.a (next action), e.c (city), e.d (follow-up date) and e.calls
+       survive on purpose: those are facts, not today's activity */
+    return moved;
+  }
+  function archiveDay(){
+    var moved=0;
+    for(var id in state){ if(archiveEntry(state[id])) moved++; }
     if(moved){ save(); }
     return moved;
   }
+  /* The backstop under archiveDay: a phone left open across midnight that
+     never fired visibilitychange still cannot weld two days together,
+     because the first tap on a stale card rolls its old day over first. */
+  function rollIfStale(id){
+    var e=state[id]; if(!e || !e.t || e.t>=midnight()) return false;
+    return archiveEntry(e);
+  }
   function markDayExported(){
     /* Same window the report used, so every entry that was reported is
-       stamped. Stamping only since midnight left yesterday-after-export
-       entries reported once, never stamped, never archived: lit forever. */
+       stamped: today's, and the dated history entries from unfiled days. */
     var mid=midnight();
     var exp=0; try{ exp=Number(localStorage.getItem('cc-deck-export')||0)||0; }catch(e){}
     if(exp>0 && exp<Date.now()) mid=Math.min(exp,mid);
-    for(var id in state){ if(state[id] && state[id].t>=mid) state[id].exp=Date.now(); }
+    for(var id in state){
+      var e=state[id]; if(!e) continue;
+      if(e.t>=mid) e.exp=Date.now();
+      (e.h||[]).forEach(function(h){ if(h.ts && h.ts>=mid) h.exp=true; });
+    }
     save();
   }
 
@@ -3262,6 +3296,24 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
 
   /* boot */
   var archived=archiveDay();
+  /* a day the Command Center already has a Deck Log row for (sent from
+     here, or auto-filed by the bridge at night) is filed, whatever this
+     phone remembers; the next report must not carry it again */
+  function markLogged(days){
+    var logged={}; (days||[]).forEach(function(d){ logged[d]=1; });
+    if(!Object.keys(logged).length) return 0;
+    var changed=0;
+    for(var id in state){
+      (state[id].h||[]).forEach(function(h){
+        if(h.exp || !h.ts) return;
+        if(logged[ymdLocal(new Date(h.ts))]){ h.exp=true; changed++; }
+      });
+    }
+    if(changed) save();
+    return changed;
+  }
+  markLogged(DATA.logged);
+  window.__deckLogged=markLogged;     /* boot calls this when the live roster lands behind the cache */
   var promoted=promoteNext();
   applyPlan(); renderPlanDoc(); applySecs(); cards.forEach(paint); counts(); syncState();
   /* a person just added from the form: land on their card */
@@ -3281,6 +3333,29 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   buildGeoBar();
   countTabs();
   setTab(TABS[0] ? TABS[0].id : 'today');
+  /* ── the quiet refresh (Oct 2) ─────────────────────────────────
+     The deck opens from the copy on this phone and the bridge answers in
+     the background. When the live roster differs, boot reloads the page,
+     but never under Carlo's thumb: it asks here first, and it puts the
+     tab and the scroll position back afterwards so the swap is a blink. */
+  window.__deckBusy=function(){
+    var a=document.activeElement;
+    if(a && /^(INPUT|TEXTAREA)$/.test(a.tagName||'')) return 'typing';
+    if(document.querySelector('details.sec.pinned')) return 'a card is open';
+    var aw=document.getElementById('addwrap'); if(aw && !aw.hidden) return 'adding a person';
+    if(selTab()==='marketing' && MKT.sel && waitLeft(MKT.sel)) return 'a text is counting down';
+    var lw=document.getElementById('logwrap'); if(lw && !lw.hidden) return 'the day is being closed out';
+    return '';
+  };
+  window.__deckView=function(){ return { tab: selTab(), y: window.scrollY||0, q: (document.getElementById('q')||{}).value||'' }; };
+  window.__flushDeck=function(){ flush(false); return queue.length; };
+  (function(){
+    var r=null; try{ r=JSON.parse(sessionStorage.getItem('cc-deck-view')||'null'); sessionStorage.removeItem('cc-deck-view'); }catch(e){}
+    if(!r || !r.t || Date.now()-r.t>120000) return;
+    if(r.tab && TABBY[r.tab]) setTab(r.tab);
+    if(r.q){ var qi=document.getElementById('q'); if(qi){ qi.value=r.q; filter(); } }
+    setTimeout(function(){ try{ window.scrollTo(0, r.y||0); }catch(e){} }, 30);
+  })();
   if(DATA.stale) banner('Showing the copy saved on this phone — '+(DATA.why||'the bridge did not answer')+'. Tap Refresh deck in Sync settings when you have signal.');
   else if(DATA.notes && DATA.notes.length) banner(DATA.notes.join(' · '));
   else if(DATA.gaps && DATA.gaps.length){
@@ -3289,7 +3364,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(gapIds.length) banner(gapIds.length+' contact'+(gapIds.length===1?' has':'s have')+' no call outline written yet. Tonight\'s plan writes them for whoever is on it.',true);
   }
   /* built time in the footer, so "is this today's roster" has an answer */
-  (function(){ var bl=document.getElementById('buildline'); if(bl && DATA.built){ var b=new Date(DATA.built); bl.textContent='v6.1 · roster '+(isNaN(b)?DATA.built:b.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})); } })();
+  (function(){ var bl=document.getElementById('buildline'); if(bl && DATA.built){ var b=new Date(DATA.built); bl.textContent='v6.2 · roster '+(isNaN(b)?DATA.built:b.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})); } })();
   /* A deck left open across midnight — the common case for a phone that is
      never closed — must roll the day over when it comes back into view:
      archive what was sent, forget the geo chip, repaint. */
@@ -3817,66 +3892,151 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
      honest way to rebuild rather than binding everything twice. */
   window.__reloadDeck = function () { location.reload(); };
 
-  function load(cfg, isReload) {
-    if (!isReload) gate('Loading your pipeline…', '');
+  /* ── show what we have, then check (Oct 2) ─────────────────────
+     Until now every open waited for the bridge: "Loading your pipeline…"
+     for as long as the roster call took, up to 60 seconds, and iOS kills
+     a home-screen app that has been in the background a few minutes, so
+     fifteen minutes in the car meant a cold start and a wait. A five-minute
+     gap between appointments was not a call.
 
-    deriveKey(cfg.key).then(function (k) {
-      cacheKey = k;
-      var live = Promise.all([
-        get(cfg, 'roster').catch(function (e) { return { ok: false, error: String(e) }; }),
-        get(cfg, 'content').catch(function (e) { return { ok: false, error: String(e) }; })
-      ]);
-      var cached = Promise.all([getCache(RKEY), getCache(CKEY)]);
+     Now the deck opens from the copy on this phone in about a second, with
+     today's taps on top of it exactly as they were saved, and the bridge is
+     asked in the background. Taps never depended on the roster load: they
+     are saved the instant they happen and pushed to Deck State right then
+     (queued when there is no signal). When the live roster differs from
+     what is on screen, the page reloads itself, but only when nothing is
+     in Carlo's hand (no field focused, no card open, no countdown), and it
+     puts the tab and scroll position back, so the swap is a blink. */
+  var FP_DEPTH = 0;
+  function fingerprint(roster, content) {
+    var s = JSON.stringify((roster && roster.contacts) || []) + '|' + JSON.stringify((roster && roster.targets) || null) +
+            '|' + JSON.stringify((content && content.cards) || {}) + '|' + JSON.stringify((content && content.tabs) || null);
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h + ':' + s.length;
+  }
+  function fmtWhen(t) {
+    if (!t) return '';
+    var d = new Date(t), now = new Date();
+    var same = d.toDateString() === now.toDateString();
+    var tm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return same ? tm : (d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + tm);
+  }
+  function syncLine(txt) {
+    var el = $('syncline'); if (!el) return;
+    el.textContent = txt || '';
+  }
+  function show(roster, content, opts) {
+    opts = opts || {};
+    var notes = (roster.notes || []).slice();
+    if (opts.contentStale) notes.unshift('Card copy and tab definitions are from this phone\'s cache (' + opts.contentWhy + ').');
+    else if (!content) notes.unshift('Card copy and tab definitions did not load; using the built-in tabs.');
+    if (opts.fromCache) notes = [];     /* the bridge's notes are about a run; the cache shows none */
+    window.__deckData = {
+      contacts: roster.contacts,
+      targets: roster.targets || null,
+      avgOrder: roster.avgOrder || 500,
+      cards: (content && content.cards) || {},
+      tabs: (content && content.tabs) || null,
+      notes: notes,
+      built: roster.built,
+      logged: roster.logged || [],
+      stale: !!opts.stale,
+      why: opts.why,
+      fromCache: !!opts.fromCache,
+      cachedAt: roster.cachedAt || 0
+    };
+    window.__buildCard = buildCard;
+    ungate();
+    if (window.__initDeck) window.__initDeck(opts.isReload);
+  }
+  var pendingReload = false, lastAuto = 0;
+  function applyUpdate(why) {
+    /* at most one automatic reload a minute, so two bridges disagreeing
+       (the cached roster and a rebuilt one) can never ping-pong */
+    try { lastAuto = Number(sessionStorage.getItem('cc-deck-auto') || 0); } catch (e) {}
+    if (Date.now() - lastAuto < 60000) { syncLine('Updated roster ready · tap Refresh deck'); return; }
+    var busy = (window.__deckBusy && window.__deckBusy()) || '';
+    if (busy) {
+      pendingReload = true;
+      syncLine('Updated roster ready · applies when you are done ' + busy);
+      return;
+    }
+    try { sessionStorage.setItem('cc-deck-auto', String(Date.now())); } catch (e) {}
+    try { var v = window.__deckView ? window.__deckView() : {}; v.t = Date.now(); sessionStorage.setItem('cc-deck-view', JSON.stringify(v)); } catch (e2) {}
+    var left = 0; try { left = window.__flushDeck ? window.__flushDeck() : 0; } catch (e3) {}
+    setTimeout(function () { location.reload(); }, left ? 1200 : 150);
+  }
+  /* a deferred update lands when the card closes or the app comes back */
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && pendingReload && !(window.__deckBusy && window.__deckBusy())) applyUpdate('visible'); });
+  document.addEventListener('click', function (e) {
+    if (!pendingReload) return;
+    var t = e.target && e.target.closest ? e.target.closest('.tab, [data-mksel]') : null;
+    if (t) setTimeout(function () { if (pendingReload && !(window.__deckBusy && window.__deckBusy())) applyUpdate('tab'); }, 50);
+  }, true);
 
-      return live.then(function (res) {
-        var roster = res[0], content = res[1];
-        if (roster && roster.ok && roster.contacts) {
-          putCache(RKEY, roster);
-          if (content && content.ok) { putCache(CKEY, content); return { roster: roster, content: content, stale: false }; }
-          /* Roster fine, content not: use the cached content rather than
-             silently swapping Carlo's tabs for the built-in defaults. */
-          return cached.then(function (c) {
-            return { roster: roster, content: c[1] || null, stale: false,
-                     contentStale: !!c[1], contentWhy: (content && content.error) || 'content did not load' };
-          });
-        }
-        /* The bridge is unreachable or said no. Fall back to what this phone
-           already has rather than showing an empty deck — an empty deck in a
-           parking lot is what a lost day looks like. */
-        return cached.then(function (c) {
-          return { roster: c[0], content: c[1], stale: true,
-                   why: (roster && roster.error) || 'the bridge did not answer' };
-        });
-      });
-    }).then(function (d) {
-      if (!d.roster || !d.roster.contacts || !d.roster.contacts.length) {
-        if (isReload) return false;
-        gate('No contacts loaded.',
-          'The bridge answered with nothing usable' + (d.why ? (': <b>' + esc(d.why) + '</b>') : '') +
-          '. Check the URL and key in Sync settings, and that the bridge was redeployed as a <b>new version</b>.', true);
-        window.__deckData = { contacts: [], cards: {}, tabs: [] };
-        if (window.__initDeck) window.__initDeck();
+  function refreshInBackground(cfg, shownFp, cachedAt) {
+    syncLine('Synced ' + fmtWhen(cachedAt) + ' · checking…');
+    return Promise.all([
+      get(cfg, 'roster').catch(function (e) { return { ok: false, error: String(e) }; }),
+      get(cfg, 'content').catch(function (e) { return { ok: false, error: String(e) }; })
+    ]).then(function (res) {
+      var roster = res[0], content = res[1];
+      if (!(roster && roster.ok && roster.contacts && roster.contacts.length)) {
+        syncLine('Last synced ' + fmtWhen(cachedAt) + ' · the bridge did not answer');
+        if (window.__banner) window.__banner('Showing the copy saved on this phone (' + fmtWhen(cachedAt) + '). The bridge did not answer; your taps are queued and go out when it does.');
         return false;
       }
-      var notes = (d.roster.notes || []).slice();
-      if (d.contentStale) notes.unshift('Card copy and tab definitions are from this phone\'s cache (' + d.contentWhy + ').');
-      else if (!d.content) notes.unshift('Card copy and tab definitions did not load; using the built-in tabs.');
-      window.__deckData = {
-        contacts: d.roster.contacts,
-        targets: d.roster.targets || null,
-        avgOrder: d.roster.avgOrder || 500,
-        cards: (d.content && d.content.cards) || {},
-        tabs: (d.content && d.content.tabs) || null,
-        notes: notes,
-        built: d.roster.built,
-        stale: d.stale,
-        why: d.why
-      };
-      window.__buildCard = buildCard;
-      ungate();
-      if (window.__initDeck) window.__initDeck(isReload);
-      try { addForm(cfg); } catch (e) {}
-      return true;
+      roster.cachedAt = Date.now();
+      putCache(RKEY, roster);
+      try { if (window.__deckLogged) window.__deckLogged(roster.logged || []); } catch (e0) {}
+      return (content && content.ok ? Promise.resolve(content) : getCache(CKEY)).then(function (c) {
+        if (content && content.ok) putCache(CKEY, content);
+        var fp = fingerprint(roster, c);
+        if (fp === shownFp) { syncLine('Synced ' + fmtWhen(roster.cachedAt)); return true; }
+        applyUpdate('changed');
+        return true;
+      });
+    });
+  }
+
+  function load(cfg, isReload) {
+    deriveKey(cfg.key).then(function (k) {
+      cacheKey = k;
+      return Promise.all([getCache(RKEY), getCache(CKEY)]);
+    }).then(function (c) {
+      var cr = c[0], cc = c[1];
+      if (cr && cr.contacts && cr.contacts.length) {
+        /* the fast path: this phone's copy now, the bridge in a moment */
+        var shownFp = fingerprint(cr, cc);      /* before the shell decorates the objects */
+        show(cr, cc, { fromCache: true, isReload: isReload });
+        try { addForm(cfg); } catch (e) {}
+        return refreshInBackground(cfg, shownFp, cr.cachedAt || 0);
+      }
+      /* nothing cached (a new phone, or a wipe): the bridge, with the gate up */
+      if (!isReload) gate('Loading your pipeline…', '');
+      return Promise.all([
+        get(cfg, 'roster').catch(function (e) { return { ok: false, error: String(e) }; }),
+        get(cfg, 'content').catch(function (e) { return { ok: false, error: String(e) }; })
+      ]).then(function (res) {
+        var roster = res[0], content = res[1];
+        if (!(roster && roster.ok && roster.contacts && roster.contacts.length)) {
+          if (isReload) return false;
+          gate('No contacts loaded.',
+            'The bridge answered with nothing usable' + ((roster && roster.error) ? (': <b>' + esc(roster.error) + '</b>') : '') +
+            '. Check the URL and key in Sync settings, and that the bridge was redeployed as a <b>new version</b>.', true);
+          window.__deckData = { contacts: [], cards: {}, tabs: [] };
+          if (window.__initDeck) window.__initDeck();
+          return false;
+        }
+        roster.cachedAt = Date.now();
+        putCache(RKEY, roster);
+        if (content && content.ok) putCache(CKEY, content);
+        show(roster, content && content.ok ? content : null, { isReload: isReload, contentStale: false, contentWhy: (content && content.error) || '' });
+        try { addForm(cfg); } catch (e) {}
+        syncLine('Synced ' + fmtWhen(roster.cachedAt));
+        return true;
+      });
     }).catch(function (e) {
       if (isReload) return false;
       gate('Something went wrong loading the deck.', esc(String(e)), true);
@@ -3890,8 +4050,6 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   else boot();
 })();
 </script>
-
-
 <style>
 /* v4.0 status styling — placed last so it wins the cascade over the original theme */
 .status{flex-wrap:nowrap;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
