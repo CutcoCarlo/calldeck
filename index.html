@@ -1335,8 +1335,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     /* A plan can name someone Carlo has already dated for later on the
        phone (the bridge tags the row "Dated on the phone"). His date wins:
        the card is held back and counted, not shown. */
+    /* Oct 15: the rule was written for a plan built the night before; it
+       must not read a date Carlo sets DURING the day as a reason to hide
+       the card. The deck refreshes itself now, so a follow-up date tapped
+       at 10am came back from the bridge at 10:01 tagged "dated on the
+       phone", and eight of a 24-name list vanished before lunch. A date
+       chosen today (c.pd, the day it was set) keeps the card on Today;
+       only a date set before today holds a plan id back. */
     function heldBack(c) {
-      if (!c.pd) return false;
+      if (!c.pd || c.pd >= ymdLocal(t0)) return false;
       var dd = dueDays(effFu(c), now);
       return dd !== null && dd > 0;
     }
@@ -3975,7 +3982,28 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if (t) setTimeout(function () { if (pendingReload && !(window.__deckBusy && window.__deckBusy())) applyUpdate('tab'); }, 50);
   }, true);
 
-  function refreshInBackground(cfg, shownFp, cachedAt) {
+  /* Oct 15: a person ORDERed or PARKed this morning is moved off the
+     pipeline by the bridge on the next refresh, and the refresh is
+     automatic now, so the card vanished from Today the same day, notes
+     and all. Today's list is a promise: anyone on today's plan who is
+     missing from the live roster is carried over from the phone's copy
+     for the rest of the day, tagged, so the day can still be read and
+     written on that card. Tomorrow the roster is the roster. */
+  function keepMoved(oldR, newR) {
+    var plan = null; try { plan = JSON.parse(localStorage.getItem('cc-calldeck-day') || 'null'); } catch (e) { plan = null; }
+    if (!plan || !plan.ids || !plan.ids.length || String(plan.date || '').slice(0, 10) !== todayIso()) return [];
+    var have = {}; (newR.contacts || []).forEach(function (c) { have[c.id] = 1; });
+    var out = [];
+    (oldR && oldR.contacts || []).forEach(function (c) {
+      if (have[c.id] || plan.ids.indexOf(c.id) < 0) return;
+      var g = JSON.parse(JSON.stringify(c)); delete g.reg;
+      g.moved = true;
+      g.tags = (g.tags || []).filter(function (t) { return !/^Moved today/.test(t.t || t); }).concat(['Moved today: off the deck tomorrow']);
+      out.push(g);
+    });
+    return out;
+  }
+  function refreshInBackground(cfg, shownFp, cachedAt, oldRoster) {
     syncLine('Synced ' + fmtWhen(cachedAt) + ' · checking…');
     return Promise.all([
       get(cfg, 'roster').catch(function (e) { return { ok: false, error: String(e) }; }),
@@ -3987,6 +4015,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         if (window.__banner) window.__banner('Showing the copy saved on this phone (' + fmtWhen(cachedAt) + '). The bridge did not answer; your taps are queued and go out when it does.');
         return false;
       }
+      var ghosts = keepMoved(oldRoster, roster);
+      if (ghosts.length) roster.contacts = roster.contacts.concat(ghosts);
       roster.cachedAt = Date.now();
       putCache(RKEY, roster);
       try { if (window.__deckLogged) window.__deckLogged(roster.logged || []); } catch (e0) {}
@@ -4011,7 +4041,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
         var shownFp = fingerprint(cr, cc);      /* before the shell decorates the objects */
         show(cr, cc, { fromCache: true, isReload: isReload });
         try { addForm(cfg); } catch (e) {}
-        return refreshInBackground(cfg, shownFp, cr.cachedAt || 0);
+        return refreshInBackground(cfg, shownFp, cr.cachedAt || 0, cr);
       }
       /* nothing cached (a new phone, or a wipe): the bridge, with the gate up */
       if (!isReload) gate('Loading your pipeline…', '');
