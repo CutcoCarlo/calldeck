@@ -296,6 +296,21 @@ textarea.note{resize:vertical;min-height:38px;line-height:1.45;font-family:inher
 .prow .pt{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;color:var(--brass);padding-top:2px}
 .prow .pw{font-size:14px;color:var(--ink-2);line-height:1.4}
 .prow.hot .pw{font-weight:700;color:var(--ink)}
+/* the To-Dos checklist on the Plan tab (Oct 15) */
+.td-row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line)}
+.td-row:last-of-type{border-bottom:0}
+.td-box{width:24px;height:24px;border:2px solid var(--line-strong);border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;color:var(--brass);padding:0;margin-top:1px}
+.td-row.done .td-box{background:var(--brass);border-color:var(--brass);color:#fff}
+.td-text{font-size:14.5px;line-height:1.35;color:var(--ink)}
+.td-row.done .td-text{text-decoration:line-through;color:var(--ink-3)}
+.td-meta{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.td-row.late .td-meta{color:var(--late);font-weight:600}
+.td-drop{font-size:11.5px;color:var(--ink-3);background:none;border:1px solid var(--line);border-radius:7px;padding:4px 8px;white-space:nowrap}
+.td-drop.armed{background:#8f2f2f;color:#fff;border-color:#8f2f2f}
+.td-add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.td-add input[type=text]{grid-column:1 / span 2;width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink);font:inherit;font-size:14px}
+.td-add input[type=date]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink);font:inherit;font-size:13px}
+.td-note{font-size:12.5px;color:var(--ink-3);margin:0}
 .ptask{font-size:14px;color:var(--ink-2);line-height:1.45;padding:9px 12px;
   background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .pquote{font-size:16.5px;font-weight:700;border-top:1px solid var(--line-strong);padding-top:15px;margin:0}
@@ -1955,6 +1970,154 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     });
   });
 
+
+  /* ═══════════════════════════════════════════════════════════════
+     TO-DOS (Oct 15) — the checklist on the Plan tab.
+     The To-Dos tab in the workbook holds every open item that is not a
+     call. The bridge serves the Open rows (fn=todos); a tap here checks one
+     off the instant it lands, is saved on the phone, and is posted to the
+     bridge right then (queued without signal, flushed when it returns),
+     exactly like a tap on a card. Nothing here waits for the bridge to
+     paint. A to-do typed here lands on the tab as a new row, Source Phone,
+     and is on the next plan. The phone never rewrites a row: it sets
+     Status and Done On by To-Do ID, or appends.
+     ═══════════════════════════════════════════════════════════════ */
+  var TDKEY='cc-deck-todos';
+  var TD={items:null, fetchedAt:0, local:{}, pending:[], arm:'', fail:''};
+  (function(){ var r=readKey(TDKEY); if(r.ok&&r.val){ TD.items=r.val.items||null; TD.fetchedAt=r.val.fetchedAt||0; TD.local=r.val.local||{}; TD.pending=r.val.pending||[]; } })();
+  function tdSave(){ try{ localStorage.setItem(TDKEY,JSON.stringify({items:TD.items,fetchedAt:TD.fetchedAt,local:TD.local,pending:TD.pending})); }catch(e){} }
+  /* yesterday's check marks are history, not a filter on today's list */
+  function tdSweep(){
+    var today=ymdLocalNow_(), changed=false;
+    for(var id in TD.local){ if(TD.local[id].day!==today){ delete TD.local[id]; changed=true; } }
+    if(changed) tdSave();
+  }
+  function tdFetch(){
+    if(!SYNC||!SYNC.url) return Promise.resolve(false);
+    var ctl=(typeof AbortController==='function')?new AbortController():null;
+    var timer=ctl?setTimeout(function(){ ctl.abort(); },12000):null;
+    return fetch(SYNC.url+'?k='+encodeURIComponent(SYNC.key)+'&fn=todos&t='+Date.now(),{signal:ctl?ctl.signal:undefined})
+      .then(function(r){ if(timer) clearTimeout(timer); return r.json(); })
+      .then(function(d){
+        if(!d||!d.ok||!d.todos) return false;
+        /* a to-do checked today stays on the list, struck through, until
+           the day turns, so a mis-tap can be undone; the bridge no longer
+           lists it (it is Done), so it is carried from the old list */
+        var keep=(TD.items||[]).filter(function(t){ return tdState(t.id)==='Done' && !d.todos.some(function(n){ return n.id===t.id; }); });
+        TD.items=d.todos.concat(keep); TD.fetchedAt=Date.now();
+        /* the bridge's answer already carries anything it has been told; a
+           check still queued keeps its local mark until it lands */
+        tdSave(); return true;
+      }).catch(function(){ if(timer) clearTimeout(timer); return false; });
+  }
+  function tdPost(body){
+    body.k=SYNC.key; body.fn='todo';
+    return fetch(SYNC.url,{method:'POST',body:JSON.stringify(body)}).then(function(r){ return r.json(); });
+  }
+  var tdFlushing=false;
+  function tdFlush(){
+    if(!SYNC||!SYNC.url||tdFlushing||!TD.pending.length) return Promise.resolve();
+    tdFlushing=true;
+    var item=TD.pending[0];
+    return tdPost(item.add?{add:item.add}:{id:item.id,status:item.status}).then(function(d){
+      tdFlushing=false;
+      if(!d||!d.ok){
+        if(d&&d.error&&!/busy/.test(d.error)){
+          /* the bridge said no for a reason that will not change: say it and stop retrying this one */
+          TD.pending.shift(); TD.fail=d.error+(d.id?' ('+d.id+')':''); tdSave();
+          banner('To-do not saved at the Command Center: '+TD.fail);
+          renderPlanDoc();
+          return tdFlush();
+        }
+        tdSave(); return;
+      }
+      TD.pending.shift();
+      if(item.add&&d.id){
+        /* the row has its real id now: swap the temporary one */
+        (TD.items||[]).forEach(function(t){ if(t.id===item.tmp){ t.id=d.id; t.src='phone '+ymdLocalNow_().slice(5,7)+'/'+ymdLocalNow_().slice(8,10); } });
+        if(TD.local[item.tmp]){ TD.local[d.id]=TD.local[item.tmp]; delete TD.local[item.tmp]; }
+      }
+      tdSave(); renderPlanDoc();
+      return tdFlush();
+    }).catch(function(){ tdFlushing=false; });
+  }
+  /* what the Plan tab lists: the bridge's open rows, today's plan's todos
+     block when the bridge has never answered, ordered by the plan when it
+     carries one, oldest first otherwise; local marks on top */
+  function tdList(forPlan){
+    var fromPlan=false, items;
+    if(TD.items){ items=TD.items.slice(); }
+    else if(forPlan&&forPlan.todos&&forPlan.todos.length){ items=forPlan.todos.map(function(t){ return {id:t.id,text:t.text,who:t.who||'',src:t.src||'',due:t.due||'',age:Number(t.age)||0}; }); fromPlan=true; }
+    else items=[];
+    var order={};
+    if(forPlan&&forPlan.todos) forPlan.todos.forEach(function(t,i){ order[t.id]=i; });
+    items.sort(function(a,b){
+      var ia=(a.id in order)?order[a.id]:9999, ib=(b.id in order)?order[b.id]:9999;
+      if(ia!==ib) return ia-ib;
+      return (b.age||0)-(a.age||0);
+    });
+    return {items:items, fromPlan:fromPlan};
+  }
+  function tdState(id){ var l=TD.local[id]; return l&&l.day===ymdLocalNow_()?l.status:'Open'; }
+  function todosHtml(forPlan){
+    if(!SYNC||!SYNC.url) return '';
+    var L=tdList(forPlan), today=ymdLocalNow_();
+    var shown=L.items.filter(function(t){ return tdState(t.id)!=='Dropped'; });
+    var open=shown.filter(function(t){ return tdState(t.id)==='Open'; }).length;
+    var h='<div class="psec" id="todos"><h3>To-dos · '+open+' open'+(L.fromPlan?' <span class="dim" style="font-weight:400">from this morning\'s plan</span>':'')+'</h3>';
+    if(!shown.length) h+='<p class="td-note">'+(TD.items||L.fromPlan?'Nothing open. Add one below.':'Not loaded yet; the bridge has not answered. Tap Sync now, or add one below.')+'</p>';
+    shown.forEach(function(t){
+      var st=tdState(t.id), done=st==='Done', late=(t.age||0)>=7&&!done;
+      var meta=[t.who, t.src, (t.age||0)+' day'+(t.age===1?'':'s')+(late?' · needs a decision':''), t.due?('due '+t.due):''].filter(Boolean).join(' · ');
+      h+='<div class="td-row'+(done?' done':'')+(late?' late':'')+'" data-tdrow="'+hesc(t.id)+'">'
+        +'<button class="td-box" data-tdcheck="'+hesc(t.id)+'" aria-pressed="'+(done?'true':'false')+'" aria-label="'+(done?'Done, tap to undo':'Mark done')+'">'+(done?'✓':'')+'</button>'
+        +'<div><div class="td-text">'+hesc(t.text)+'</div><div class="td-meta">'+hesc(meta)+'</div></div>'
+        +(done?'<span></span>':'<button class="td-drop'+(TD.arm===t.id?' armed':'')+'" data-tddrop="'+hesc(t.id)+'">'+(TD.arm===t.id?'Tap again to drop':'drop')+'</button>')
+        +'</div>';
+    });
+    h+='<div class="td-add"><input id="td-text" type="text" placeholder="Add a to-do…" autocapitalize="sentences"><input id="td-due" type="date" min="'+today+'" aria-label="Due date (optional)"><button class="daybtn primary" id="td-save">Save</button></div>';
+    if(TD.pending.length) h+='<p class="td-note">'+TD.pending.length+' change'+(TD.pending.length===1?'':'s')+' waiting for signal.</p>';
+    h+='</div>';
+    return h;
+  }
+  function tdMark(id,status){
+    var today=ymdLocalNow_();
+    if(status==='Open') delete TD.local[id]; else TD.local[id]={status:status,day:today};
+    /* one entry per id in the queue: the newest wins */
+    TD.pending=TD.pending.filter(function(x){ return x.id!==id; });
+    TD.pending.push({id:id,status:status,t:Date.now()});
+    tdSave(); renderPlanDoc(); tdFlush();
+  }
+  function tdAdd(text,due){
+    var tmp='tmp-'+Date.now(), today=ymdLocalNow_();
+    TD.items=TD.items||[];
+    TD.items.push({id:tmp,text:text,who:'',src:'phone '+today.slice(5,7)+'/'+today.slice(8,10),due:due||'',age:0});
+    TD.pending.push({tmp:tmp,add:{text:text,due:due||''},t:Date.now()});
+    tdSave(); renderPlanDoc(); tdFlush();
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target.closest?e.target.closest('[data-tdcheck],[data-tddrop],#td-save'):null;
+    if(!t) return;
+    if(t.dataset.tdcheck!==undefined){ var id=t.dataset.tdcheck; tdMark(id, tdState(id)==='Done'?'Open':'Done'); return; }
+    if(t.dataset.tddrop!==undefined){
+      var did=t.dataset.tddrop;
+      /* two taps, no dialog: Drop is a decision */
+      if(TD.arm!==did){ TD.arm=did; renderPlanDoc(); setTimeout(function(){ if(TD.arm===did){ TD.arm=''; renderPlanDoc(); } },6000); return; }
+      TD.arm=''; tdMark(did,'Dropped'); return;
+    }
+    if(t.id==='td-save'){
+      var ti=document.getElementById('td-text'), di=document.getElementById('td-due');
+      var text=String(ti&&ti.value||'').replace(/\s+/g,' ').trim(); if(!text){ if(ti) ti.focus(); return; }
+      var due=di&&di.value||'';
+      if(ti) ti.value=''; if(di) di.value='';
+      tdAdd(text, due);
+    }
+  });
+  window.__todos={state:TD, list:tdList, flush:tdFlush, fetch:tdFetch};
+  tdSweep();
+  /* back in view (the tunnel is behind him): send what was queued */
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ tdSweep(); tdFlush(); } });
+
   /* ── Plan tab: the daily briefing, rendered from plan.doc ── */
   function hesc(s){
     return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -2003,7 +2166,8 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(!d){
       host.innerHTML=sw+'<div class="intro"><span class="eyebrow">Daily plan</span>'
         +'<h2>No briefing loaded</h2>'
-        +'<p>Your plan brief arrives with the morning deck push. Say "plan my day" to Claude and it lands here.</p></div>';
+        +'<p>Your plan brief arrives with the morning deck push. Say "plan my day" to Claude and it lands here.</p></div>'
+        +todosHtml(plan);
       return;
     }
     var h=sw+'<div class="intro"><span class="eyebrow">'+hesc(d.eyebrow||'Daily plan')
@@ -2031,8 +2195,15 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
       h+='</div>';
     }
     if(showNext) h+=callListHtml(nextPlan);
+    /* the open to-dos, under today's brief and under tomorrow's preview */
+    h+=todosHtml(showNext?nextPlan:plan);
     if(d.quote){ h+='<p class="pquote">'+hesc(d.quote)+'</p>'; }
+    /* a word being typed into Add a to-do survives a redraw */
+    var keepT=(document.getElementById('td-text')||{}).value||'', keepD=(document.getElementById('td-due')||{}).value||'', hadFocus=document.activeElement&&document.activeElement.id;
     host.innerHTML=h;
+    if(keepT&&document.getElementById('td-text')) document.getElementById('td-text').value=keepT;
+    if(keepD&&document.getElementById('td-due')) document.getElementById('td-due').value=keepD;
+    if(hadFocus==='td-text'&&document.getElementById('td-text')) document.getElementById('td-text').focus();
     [].forEach.call(host.querySelectorAll('[data-pv]'),function(b){
       b.addEventListener('click',function(){ planView=b.dataset.pv; renderPlanDoc(); });
     });
@@ -2487,6 +2658,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
     if(pp && !isMkt) pp.dataset.p = isPlan ? name : 'plan';
     if(mp) mp.dataset.p = isMkt ? name : 'marketing';
     if(isMkt && window.__renderMkt) window.__renderMkt();
+    if(tab && tab.kind==='plan'){ tdFlush().then(function(){ return tdFetch(); }).then(function(ok4){ if(ok4) renderPlanDoc(); }); }
 
     /* Carlo asked for sync settings and the day code at the bottom of the
        Today tab, not off in a Setup tab of their own. They also appear when
@@ -3393,6 +3565,7 @@ var CITY2AREA={"livermore":"Tri-Valley","pleasanton":"Tri-Valley","dublin":"Tri-
   try{ localStorage.setItem('cc-deck-seen-day', ymdLocalNow_()); }catch(e){}
   fetchPlan(false);
   if(queue.length) flush(false);
+  tdFlush().then(function(){ return tdFetch(); }).then(function(ok3){ if(ok3) renderPlanDoc(); });
 };
 </script>
 <script>
